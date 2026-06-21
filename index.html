@@ -1,0 +1,2035 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#11142a">
+<title>WAKE LEAGUE</title>
+<style>
+  :root{
+    --bg:#0d1020; --bg2:#151935; --card:#1b2042; --card2:#232a52;
+    --line:#2c3463; --txt:#eef1ff; --sub:#9aa3d0;
+    --blue:#5b7cff; --blue2:#3a5bff; --green:#28c98a; --amber:#ffb020; --red:#ff5d6c; --pink:#ff6fae;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;}
+  body{display:flex;justify-content:center;}
+  #app{width:100%;max-width:460px;min-height:100vh;background:linear-gradient(180deg,#0d1020,#0f1330 40%,#0d1020);
+    position:relative;overflow:hidden;padding-bottom:78px;}
+  .screen{display:none;padding:18px 16px 10px;animation:fade .25s ease;}
+  .screen.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h1,h2,h3{margin:0;font-weight:800;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .topbar .logo{font-size:20px;font-weight:900;letter-spacing:.5px;}
+  .topbar .logo span{color:var(--blue);}
+  .pill{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:12px;color:var(--sub);}
+  .pill b{color:var(--amber);}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:12px;
+    box-shadow:0 4px 16px rgba(0,0,0,.18);}
+  .muted{color:var(--sub);font-size:13px;}
+  .row{display:flex;align-items:center;gap:10px;}
+  .between{justify-content:space-between;}
+  .btn{border:none;border-radius:16px;padding:15px 16px;font-size:15.5px;font-weight:800;cursor:pointer;
+    background:linear-gradient(135deg,#5b7cff,#3a5bff);color:#fff;width:100%;transition:transform .08s,box-shadow .2s;
+    box-shadow:0 6px 18px rgba(58,91,255,.32);letter-spacing:-.2px;white-space:nowrap;}
+  .btn:active{transform:scale(.97);box-shadow:0 3px 10px rgba(58,91,255,.28);}
+  .btn.sec{background:var(--card2);color:var(--txt);border:1px solid var(--line);box-shadow:none;}
+  .btn.ghost{background:transparent;color:var(--blue);}
+  .btn.sm{width:auto;padding:9px 14px;font-size:13px;border-radius:11px;flex:0 0 auto;}
+  .iconbtn{width:42px;height:42px;border-radius:12px;background:var(--card2);border:1px solid var(--line);
+    color:var(--txt);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;}
+  /* alarm list */
+  .alarm{display:flex;align-items:center;justify-content:space-between;}
+  .alarm .t{font-size:34px;font-weight:800;letter-spacing:-1px;line-height:1;}
+  .alarm.off .t,.alarm.off .meta{opacity:.4;}
+  .meta{font-size:12px;color:var(--sub);margin-top:6px;}
+  .chiprow{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;}
+  .chip{font-size:11px;background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:5px 10px;color:var(--sub);white-space:nowrap;}
+  .chip.on{background:rgba(91,124,255,.18);border-color:var(--blue);color:#cdd6ff;}
+  /* switch */
+  .sw{width:48px;height:28px;border-radius:999px;background:#3a3f66;position:relative;cursor:pointer;transition:.2s;flex:0 0 auto;}
+  .sw.on{background:var(--green);}
+  .sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:.2s;}
+  .sw.on::after{left:23px;}
+  /* bottom nav */
+  .nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:460px;
+    background:rgba(15,18,40,.92);backdrop-filter:blur(12px);border-top:1px solid var(--line);
+    display:flex;justify-content:space-around;padding:8px 0 calc(8px + env(safe-area-inset-bottom));z-index:40;}
+  .nav a{flex:1;text-align:center;color:var(--sub);font-size:10.5px;font-weight:700;text-decoration:none;padding:4px 0;
+    display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;transition:color .15s;}
+  .nav a .ic{font-size:20px;line-height:1;width:46px;height:30px;display:flex;align-items:center;justify-content:center;
+    border-radius:14px;transition:background .2s;}
+  .nav a.on{color:var(--blue);}
+  .nav a.on .ic{background:rgba(91,124,255,.18);}
+  /* fab — 우하단 고정, 화면 밖으로 안 밀리도록 right 기준 */
+  .fab{position:fixed;bottom:92px;right:calc(50% - 230px + 18px);width:56px;height:56px;border-radius:50%;
+    background:var(--blue2);color:#fff;font-size:28px;border:none;box-shadow:0 8px 24px rgba(58,91,255,.45);cursor:pointer;z-index:41;
+    display:flex;align-items:center;justify-content:center;line-height:1;padding-bottom:3px;}
+  @media (max-width:476px){.fab{right:18px;}}
+  /* modal */
+  .modal{position:fixed;inset:0;background:rgba(5,7,18,.6);z-index:60;display:none;align-items:flex-end;justify-content:center;}
+  .modal.show{display:flex;}
+  .sheet{width:100%;max-width:460px;background:var(--bg2);border-radius:22px 22px 0 0;border-top:1px solid var(--line);
+    padding:18px 16px calc(20px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto;animation:up .25s ease;}
+  @keyframes up{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}
+  label.fl{display:block;font-size:12px;color:var(--sub);margin:14px 0 7px;font-weight:700;}
+  input[type=time],input[type=text],input[type=number],textarea,select{width:100%;background:var(--card);border:1px solid var(--line);
+    color:var(--txt);border-radius:14px;padding:14px;font-size:16px;font-family:inherit;}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--blue);}
+  input[type=time]{font-size:26px;text-align:center;font-weight:800;letter-spacing:1px;}
+  .opts{display:flex;flex-wrap:wrap;gap:8px;}
+  .opt{flex:1 1 28%;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 8px;text-align:center;
+    font-size:13px;cursor:pointer;min-width:0;}
+  .opt.on{border-color:var(--blue);background:rgba(91,124,255,.16);}
+  .opt .e{font-size:20px;display:block;margin-bottom:3px;}
+  .days{display:flex;gap:6px;justify-content:space-between;}
+  .day{flex:1;aspect-ratio:1;border-radius:50%;background:var(--card);border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;}
+  .day.on{background:var(--blue2);border-color:var(--blue2);color:#fff;font-weight:700;}
+  /* ring overlay */
+  #ring{position:fixed;inset:0;z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:24px;color:#fff;overflow-y:auto;}
+  #ring.show{display:flex;}
+  #ring.kbd{justify-content:flex-start;padding-top:18px;}
+  #ring .now{font-size:64px;font-weight:900;letter-spacing:-2px;text-shadow:0 4px 30px rgba(0,0,0,.4);}
+  #ring .lbl{font-size:18px;opacity:.92;margin-top:4px;}
+  #ring .bell{font-size:54px;animation:ring .6s infinite;}
+  @keyframes ring{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(12deg)}}
+  .missionbox{background:rgba(255,255,255,.14);backdrop-filter:blur(6px);border-radius:18px;padding:18px;margin-top:22px;width:100%;max-width:360px;}
+  .missionbox h3{font-size:16px;margin-bottom:12px;}
+  .bignum{font-size:30px;font-weight:900;margin:6px 0 14px;}
+  .progress{height:12px;border-radius:99px;background:rgba(255,255,255,.25);overflow:hidden;margin:12px 0;}
+  .progress>div{height:100%;background:#fff;width:0;transition:width .15s;}
+  /* member */
+  .mem{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--line);}
+  .mem:last-child{border-bottom:none;}
+  .ava{width:40px;height:40px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto;
+    background:linear-gradient(135deg,#3a5bff,#7b4bff);}
+  .ava.gray{background:#333a63;filter:grayscale(.4);}
+  .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;}
+  .dot.up{background:var(--green);} .dot.no{background:#555c85;}
+  .gdir{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--line);gap:10px;}
+  .tag{font-size:10px;background:var(--card2);border:1px solid var(--line);border-radius:6px;padding:2px 7px;color:var(--sub);margin-right:5px;}
+  .toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%);background:#262c54;border:1px solid var(--line);
+    color:#fff;padding:11px 18px;border-radius:13px;font-size:14px;z-index:120;opacity:0;transition:.3s;max-width:90%;text-align:center;}
+  .toast.show{opacity:1;}
+  .statgrid{display:flex;gap:10px;}
+  .stat{flex:1;background:var(--card);border:1px solid var(--line);border-radius:15px;padding:14px;text-align:center;}
+  .stat .v{font-size:24px;font-weight:900;} .stat .k{font-size:11px;color:var(--sub);margin-top:3px;}
+  .barwrap{display:flex;align-items:flex-end;gap:7px;height:90px;margin-top:8px;}
+  .barwrap .b{flex:1;background:var(--blue2);border-radius:6px 6px 0 0;min-height:4px;position:relative;}
+  .barwrap .b.miss{background:#3a3f66;}
+  .barwrap .b span{position:absolute;bottom:-20px;left:0;right:0;text-align:center;font-size:10px;color:var(--sub);}
+  .sectitle{font-size:13.5px;color:var(--txt);font-weight:800;margin:20px 2px 9px;display:flex;align-items:center;gap:7px;}
+  .sectitle::before{content:"";width:4px;height:14px;border-radius:3px;background:var(--blue);display:inline-block;}
+  .pickrow{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:14px;cursor:pointer;font-size:15px;}
+  .pickrow .chev{color:var(--sub);font-size:20px;}
+  .hide{display:none!important;}
+  /* 받는 입장: 자는 화면 + 푸시 배너 */
+  #sleep{position:fixed;inset:0;z-index:95;background:radial-gradient(circle at 50% 32%,#1a2050,#070912);
+    display:none;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:24px;}
+  #sleep.show{display:flex;}
+  #sleep .zzz{font-size:66px;animation:bob 2.4s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+  .pushbanner{position:fixed;top:calc(10px + env(safe-area-inset-top));left:50%;
+    transform:translateX(-50%) translateY(-160%);width:92%;max-width:430px;background:#262c54;border:1px solid var(--line);
+    border-radius:16px;padding:12px 14px;z-index:130;display:flex;align-items:center;gap:11px;
+    box-shadow:0 12px 34px rgba(0,0,0,.5);transition:transform .35s cubic-bezier(.2,1.3,.4,1);}
+  .pushbanner.show{transform:translateX(-50%) translateY(0);}
+  .emptybox{text-align:center;padding:16px;}
+  /* ===== 온보딩 ===== */
+  #onboard{position:fixed;inset:0;z-index:200;background:linear-gradient(180deg,#0d1020,#141833 55%,#0d1020);
+    display:none;flex-direction:column;color:var(--txt);}
+  #onboard.show{display:flex;}
+  .ob-wrap{width:100%;max-width:460px;margin:0 auto;flex:1;display:flex;flex-direction:column;
+    padding:calc(20px + env(safe-area-inset-top)) 22px calc(20px + env(safe-area-inset-bottom));overflow-y:auto;}
+  .ob-prog{display:flex;gap:6px;margin-bottom:26px;}
+  .ob-prog .seg{flex:1;height:4px;border-radius:99px;background:var(--card2);overflow:hidden;}
+  .ob-prog .seg>i{display:block;height:100%;width:0;background:var(--blue);transition:width .35s;}
+  .ob-step{flex:1;display:none;flex-direction:column;animation:fade .3s ease;}
+  .ob-step.on{display:flex;}
+  .ob-skip{position:absolute;top:calc(20px + env(safe-area-inset-top));right:22px;color:var(--sub);
+    font-size:13px;cursor:pointer;z-index:2;background:none;border:none;font-family:inherit;}
+  .ob-kicker{font-size:13px;font-weight:800;color:var(--blue);letter-spacing:.4px;margin-bottom:10px;}
+  .ob-title{font-size:25px;font-weight:900;line-height:1.32;letter-spacing:-.5px;}
+  .ob-sub{font-size:14px;color:var(--sub);margin-top:12px;line-height:1.6;}
+  .ob-choices{display:flex;flex-direction:column;gap:11px;margin-top:30px;}
+  .ob-choice{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:17px 18px;
+    cursor:pointer;display:flex;align-items:center;gap:14px;transition:border-color .15s,background .15s,transform .08s;text-align:left;}
+  .ob-choice:active{transform:scale(.985);}
+  .ob-choice.sel{border-color:var(--blue);background:rgba(91,124,255,.14);}
+  .ob-choice .ce{font-size:26px;flex:0 0 auto;width:30px;text-align:center;}
+  .ob-choice .ct{font-weight:700;font-size:15.5px;}
+  .ob-choice .cd{font-size:12px;color:var(--sub);margin-top:3px;font-weight:400;}
+  .ob-spacer{flex:1;min-height:18px;}
+  .ob-foot{margin-top:18px;}
+  .ob-back{background:none;border:none;color:var(--sub);font-size:14px;font-family:inherit;cursor:pointer;
+    padding:8px 0;margin-bottom:6px;align-self:flex-start;}
+  .ob-hero{font-size:60px;text-align:center;margin:18px 0 6px;}
+  .ob-dday{background:linear-gradient(135deg,#3a5bff,#7b4bff);border-radius:18px;padding:18px;text-align:center;margin-top:24px;}
+  .ob-dday .dn{font-size:34px;font-weight:900;letter-spacing:-1px;}
+  .ob-dday .dl{font-size:12px;opacity:.85;margin-top:2px;}
+  .ob-result-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin-top:18px;}
+  .ob-result-card .rh{display:flex;align-items:center;gap:12px;}
+  .ob-result-card .re{font-size:34px;}
+  .ob-rrow{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);font-size:14px;}
+  .ob-rrow:last-child{border-bottom:none;}
+  .ob-rrow .ri{width:26px;text-align:center;flex:0 0 auto;}
+  .ob-gcard{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:13px;margin-top:9px;cursor:pointer;transition:border-color .15s;}
+  .ob-gcard.sel{border-color:var(--green);background:rgba(40,201,138,.12);}
+  .ob-date{width:100%;background:var(--card);border:1.5px solid var(--line);color:var(--txt);
+    border-radius:14px;padding:14px;font-size:16px;font-family:inherit;margin-top:14px;}
+  .ob-date:focus{outline:none;border-color:var(--blue);}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== 홈 / 알람 ===== -->
+  <section id="s-home" class="screen active">
+    <div class="topbar">
+      <div class="logo">WAKE <span>LEAGUE</span></div>
+      <div class="pill">🔥 연속 <b id="hStreak">0</b>일</div>
+    </div>
+    <div id="ddayCard"></div>
+    <div class="card" style="background:linear-gradient(135deg,#28306a,#1a1f44);">
+      <div class="muted">다음 알람</div>
+      <div id="nextAlarm" style="font-size:30px;font-weight:900;margin-top:4px;">알람을 추가해보세요</div>
+      <div class="muted" id="nextSub" style="margin-top:6px;"></div>
+    </div>
+    <div id="alarmList"></div>
+  </section>
+
+  <!-- ===== 길드 ===== -->
+  <section id="s-guild" class="screen">
+    <div class="topbar"><div class="logo">길드</div><div class="pill">⭐ <b id="gPoints2">0</b>P</div></div>
+    <div id="guildView"></div>
+  </section>
+
+  <!-- ===== 기록 ===== -->
+  <section id="s-rec" class="screen">
+    <div class="topbar"><div class="logo">기록</div></div>
+    <div id="recView"></div>
+  </section>
+
+  <!-- ===== 설정 ===== -->
+  <section id="s-set" class="screen">
+    <div class="topbar"><div class="logo">설정</div></div>
+    <div id="setView"></div>
+  </section>
+
+  <button class="fab" id="fab" onclick="openAlarmEditor()">＋</button>
+
+  <nav class="nav">
+    <a data-go="home" class="on" onclick="go('home')"><span class="ic">⏰</span>알람</a>
+    <a data-go="guild" onclick="go('guild')"><span class="ic">🛡️</span>길드</a>
+    <a data-go="rec" onclick="go('rec')"><span class="ic">📊</span>기록</a>
+    <a data-go="set" onclick="go('set')"><span class="ic">⚙️</span>설정</a>
+  </nav>
+</div>
+
+<!-- ===== 알람 편집 시트 ===== -->
+<div class="modal" id="alarmModal">
+  <div class="sheet">
+    <div class="row between"><h2 style="font-size:18px;" id="aeTitle">알람 추가</h2><div class="iconbtn" onclick="closeModal('alarmModal')">✕</div></div>
+    <label class="fl">시간</label>
+    <input type="time" id="aeTime" value="07:00">
+    <div id="aeTimeNote" class="muted hide" style="font-size:11px;margin-top:6px;">🔒 길드 기상시간은 길드 설정을 따라요</div>
+    <label class="fl">반복</label>
+    <div class="days" id="aeDays"></div>
+    <label class="fl">이름</label>
+    <input type="text" id="aeLabel" placeholder="예: 1교시 등교" maxlength="20">
+    <label class="fl">기상 미션</label>
+    <div id="aeMissions"></div>
+    <button class="btn sec sm" id="aeAddBtn" style="margin-top:8px;" onclick="addMissionRow()">＋ 미션 추가</button>
+    <label class="fl">알람음</label>
+    <div class="pickrow" id="aeSoundRow" onclick="openSoundPicker()"></div>
+    <label class="fl">알람 배경</label>
+    <div class="pickrow" id="aeBgRow" onclick="openBgPicker()"></div>
+    <div style="display:flex;gap:8px;margin-top:24px;">
+      <button class="btn ghost" id="aeDelete" onclick="deleteAlarm()" style="display:none;width:auto;color:var(--red);box-shadow:none;">삭제</button>
+      <button class="btn" style="flex:1;" onclick="saveAlarm()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 알람 울림 ===== -->
+<div id="ring">
+  <div class="bell">🔔</div>
+  <div class="now" id="ringTime">07:00</div>
+  <div class="lbl" id="ringLabel"></div>
+  <div class="missionbox" id="missionBox"></div>
+  <button class="btn sec" id="snoozeBtn" style="margin-top:16px;max-width:360px;background:rgba(255,255,255,.18);border:none;color:#fff;" onclick="snooze()">5분 더 자기</button>
+</div>
+
+<!-- ===== 알람음 선택 페이지 ===== -->
+<div class="modal" id="soundPickerModal"><div class="sheet">
+  <div class="row between"><h2 style="font-size:18px;">알람음 선택</h2><div class="iconbtn" onclick="closeModal('soundPickerModal')">✕</div></div>
+  <div id="soundPickerList" style="margin-top:10px;"></div>
+  <button class="btn sec" style="margin-top:10px;" onclick="closeModal('soundPickerModal');recordVoice()">＋ 새 모닝콜 만들기</button>
+</div></div>
+
+<!-- ===== 알람 배경 선택 페이지 ===== -->
+<div class="modal" id="bgPickerModal"><div class="sheet">
+  <div class="row between"><h2 style="font-size:18px;">알람 배경 선택</h2><div class="iconbtn" onclick="closeModal('bgPickerModal')">✕</div></div>
+  <div id="bgPickerList" style="margin-top:10px;"></div>
+</div></div>
+
+<!-- ===== 모닝콜 보내기 ===== -->
+<div class="modal" id="callSendModal"><div class="sheet">
+  <div class="row between"><h2 style="font-size:18px;">🎙️ 모닝콜 보내기</h2><div class="iconbtn" onclick="closeModal('callSendModal')">✕</div></div>
+  <label class="fl">받는 사람</label>
+  <div class="chiprow" id="callMembers"></div>
+  <label class="fl">보낼 모닝콜</label>
+  <div id="callSounds"></div>
+  <label class="fl">⚡ 한 번만 보내기</label>
+  <div class="row" style="gap:8px;"><input type="text" id="callOnceText" placeholder="예: 야 일어나! 지각이야"><button class="btn sm" onclick="sendOnce()">보내기</button></div>
+  <button class="btn sec" style="margin-top:12px;" onclick="closeModal('callSendModal');recordVoice()">＋ 새 모닝콜 만들기</button>
+</div></div>
+
+<!-- ===== Pro 구독 ===== -->
+<div class="modal" id="proModal">
+  <div class="sheet">
+    <div class="row between"><h2 style="font-size:19px;">✨ 웨이크리그 Pro</h2><div class="iconbtn" onclick="closeModal('proModal')">✕</div></div>
+    <div id="proReason" class="muted" style="margin:8px 0 12px;"></div>
+    <div class="card" style="background:linear-gradient(135deg,#4a2f7a,#241a44);border-color:#6b4bb0;">
+      <div style="font-weight:800;margin-bottom:10px;">Pro 혜택</div>
+      <div style="font-size:13px;line-height:2;">
+        ⏰ 알람·미션 무제한<br>
+        🎨 프리미엄 배경·사운드<br>
+        🐱 음성 변조 저장<br>
+        ✨ AI 모닝콜 무제한<br>
+        🛡️ 길드 무제한 가입<br>
+        📊 상세 통계 · 🚫 광고 제거</div>
+    </div>
+    <button class="btn" onclick="buyPro()">✨ Pro 시작하기</button>
+    <div class="muted" style="text-align:center;font-size:11px;margin-top:8px;">데모 버전은 결제 없이 켜져요. 설정에서 끌 수 있어요.</div>
+  </div>
+</div>
+
+<!-- ===== 친구 초대 ===== -->
+<div class="modal" id="inviteModal"><div class="sheet">
+  <div class="row between"><h2 style="font-size:18px;">🤝 친구 초대</h2><div class="iconbtn" onclick="closeModal('inviteModal')">✕</div></div>
+  <div id="inviteBody" style="margin-top:6px;"></div>
+</div></div>
+
+<!-- ===== 음성 / AI 모닝콜 만들기 ===== -->
+<div class="modal" id="voiceModal">
+  <div class="sheet">
+    <div class="row between"><h2 style="font-size:18px;">모닝콜 만들기</h2><div class="iconbtn" onclick="closeModal('voiceModal')">✕</div></div>
+    <label class="fl">🎙️ 직접 녹음 — 목소리 효과</label>
+    <div class="opts" id="vfx">
+      <div class="opt on" data-k="none"><span class="e">🙂</span>원본</div>
+      <div class="opt" data-k="cat"><span class="e">🐱</span>고양이</div>
+      <div class="opt" data-k="dog"><span class="e">🐶</span>강아지</div>
+    </div>
+    <button class="btn" id="recBtn" style="margin-top:12px;" onclick="doRecord()">🔴 3초 녹음 시작</button>
+    <div class="muted" style="text-align:center;font-size:12px;margin:16px 0 4px;">— 또는 —</div>
+    <label class="fl">✍️ AI 텍스트 모닝콜</label>
+    <textarea id="ttsText" rows="2" placeholder="예: 야 일어나! 지각이야! 빨리 미션 깨!"></textarea>
+    <button class="btn sec" style="margin-top:10px;" onclick="previewTts()">🔊 미리듣기</button>
+    <button class="btn" style="margin-top:8px;" onclick="makeTtsSound()">✨ AI 모닝콜 만들기</button>
+  </div>
+</div>
+
+<!-- ===== 받는 입장: 자는 화면 ===== -->
+<div id="sleep">
+  <div class="zzz">😴</div>
+  <div style="font-size:21px;font-weight:800;margin-top:12px;">자는 중...</div>
+  <div class="muted" id="sleepSub" style="margin-top:6px;color:#aeb6e6;">곧 길드원이 깨웁니다</div>
+  <button class="btn ghost" style="margin-top:34px;color:#aeb6e6;" onclick="wakeDemoCancel()">체험 중단</button>
+</div>
+
+<!-- ===== 받는 입장: 푸시 배너 (콕 찌르기) ===== -->
+<div class="pushbanner" id="push" onclick="hidePush()">
+  <div class="ava" id="pushAva">👉</div>
+  <div style="flex:1;"><div style="font-weight:700;" id="pushTitle"></div>
+    <div class="muted" style="font-size:12px;" id="pushBody"></div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ===== 온보딩 ===== -->
+<div id="onboard">
+  <button class="ob-skip" onclick="obSkip()">건너뛰기</button>
+  <div class="ob-wrap">
+    <div class="ob-prog" id="obProg"></div>
+    <div class="ob-step on" id="obStep"></div>
+  </div>
+</div>
+
+
+<script>
+/* ============ 데이터 ============ */
+const DAYS=["일","월","화","수","목","금","토"];
+const MISSIONS={
+  math:{e:"➗",n:"수학"}, typing:{e:"⌨️",n:"타이핑"}, shake:{e:"📳",n:"흔들기"},
+  reverse:{e:"🔢",n:"거꾸로 숫자"}, wordchain:{e:"🔗",n:"끝말잇기"}, chosung:{e:"🔡",n:"초성 퀴즈"},
+  squat:{e:"🏋️",n:"스쿼트"}, steps:{e:"🚶",n:"걷기"}, shakerace:{e:"⚡",n:"흔들기 레이스"},
+  rhythm:{e:"🥁",n:"리듬 탭"}, maze:{e:"🌀",n:"미로 탈출"}, shout:{e:"📢",n:"소리치기"}, speak:{e:"🗣️",n:"따라 말하기"},
+  photo:{e:"📸",n:"사진 인증"}, eyeselfie:{e:"👀",n:"눈 뜬 셀카"}, vow:{e:"🎙️",n:"오늘의 다짐"},
+  relay:{e:"🏃",n:"릴레이 깨우기"}, groupwait:{e:"⏳",n:"단체 출석"}, pokerespond:{e:"👉",n:"콕 응답"},
+  none:{e:"👆",n:"밀어서 끄기"}
+};
+const GUILD_ONLY={photo:1,eyeselfie:1,vow:1,relay:1,groupwait:1,pokerespond:1};
+const DIFFS={easy:"쉬움",normal:"보통",hard:"어려움"};
+const HAS_DIFF={math:1,typing:1,shake:1,reverse:1,chosung:1,maze:1};
+const HAS_COUNT={math:1,typing:1,shake:1,reverse:1,wordchain:1,chosung:1,squat:1,steps:1,shakerace:1,rhythm:1,speak:1,photo:1,eyeselfie:1,relay:1,groupwait:1};
+function defaultCount(t){return (t==="shake"||t==="shakerace")?20:t==="steps"?15:t==="rhythm"?8:t==="math"?3:t==="squat"?5:1;}
+function missionLabel(m){return MISSIONS[m.type].e+(HAS_COUNT[m.type]?"×"+(m.count||1):"");}
+const BGS={
+  indigo:{n:"인디고",g:"linear-gradient(160deg,#3a5bff,#1a1f55)"},
+  sunrise:{n:"해돋이",g:"linear-gradient(160deg,#ff7b54,#ffb347)"},
+  night:{n:"밤하늘",g:"linear-gradient(160deg,#232a52,#0b0e22)"},
+  forest:{n:"숲",g:"linear-gradient(160deg,#11998e,#0f5132)",pro:true},
+  pink:{n:"노을",g:"linear-gradient(160deg,#ff6fae,#7b4bff)",pro:true}
+};
+const BUILTIN_SOUNDS=[
+  {id:"bell",name:"클래식 벨",type:"tone",tone:"bell"},
+  {id:"birds",name:"새소리",type:"tone",tone:"birds"},
+  {id:"digital",name:"디지털 비프",type:"tone",tone:"digital"},
+  {id:"rise",name:"점점 커지는",type:"tone",tone:"rise",pro:true},
+  {id:"arcade",name:"아케이드",type:"tone",tone:"arcade",pro:true},
+];
+const SENTENCES=["오늘도 해낼 수 있어","아침을 이긴 사람","일어나면 절반은 성공","미래의 내가 고마워할 거야","좋은 아침 좋은 하루"];
+
+const SAMPLE_GUILDS=[
+  {id:"g1",name:"새벽 5시 클럽",emoji:"🌅",region:"전국",age:"성인",time:"05:00",members:8,streak:42,tags:["자유","미라클모닝"],type:"free"},
+  {id:"g2",name:"고3 수능 길드",emoji:"📚",region:"서울",age:"고등",time:"06:00",members:8,streak:15,tags:["조건","수능"],type:"cond",password:"1234"},
+  {id:"g3",name:"자취생 1교시 사수",emoji:"🎓",region:"전국",age:"대학",time:"07:30",members:6,streak:9,tags:["자유","대학생"],type:"free"},
+  {id:"g4",name:"중딩 등교 전쟁",emoji:"🏫",region:"경기",age:"중등",time:"07:00",members:7,streak:21,tags:["조건","등교"],type:"cond"},
+  {id:"g5",name:"아무나 모여요",emoji:"☀️",region:"전국",age:"전체",time:"08:00",members:4,streak:3,tags:["자유"],type:"free"},
+  {id:"g6",name:"중학생 아침독서",emoji:"📖",region:"부산",age:"중등",time:"06:40",members:5,streak:11,tags:["조건"],type:"cond"},
+  {id:"g7",name:"고등 모의고사 부대",emoji:"✏️",region:"대구",age:"고등",time:"06:20",members:9,streak:30,tags:["조건"],type:"cond"},
+  {id:"g8",name:"대학생 공시반",emoji:"🏛️",region:"서울",age:"대학",time:"06:00",members:7,streak:18,tags:["조건"],type:"cond"},
+  {id:"g9",name:"직장인 미라클",emoji:"💼",region:"전국",age:"성인",time:"05:30",members:10,streak:55,tags:["조건"],type:"cond"},
+  {id:"g10",name:"누구나 굿모닝",emoji:"🌤️",region:"전국",age:"전체",time:"07:00",members:6,streak:7,tags:["자유"],type:"free"},
+  {id:"g11",name:"고등 새벽기상단",emoji:"🌙",region:"인천",age:"고등",time:"05:50",members:8,streak:24,tags:["조건"],type:"cond"},
+  {id:"g12",name:"대학 1교시 동맹",emoji:"☕",region:"전국",age:"대학",time:"08:00",members:5,streak:6,tags:["자유"],type:"free"},
+  {id:"g13",name:"중등 아침운동",emoji:"⚽",region:"경기",age:"중등",time:"06:30",members:4,streak:13,tags:["조건"],type:"cond"},
+  {id:"g14",name:"수험생 비밀방",emoji:"🔒",region:"서울",age:"고등",time:"05:00",members:7,streak:33,tags:["조건"],type:"cond",password:"5678"},
+];
+const BOT_NAMES=["민준","서연","도윤","하은","지호","수아","예준","채원","유찬","소율"];
+
+/* ============ 상태 ============ */
+let S=load();
+function load(){
+  try{const r=JSON.parse(localStorage.getItem("wakeleague")); if(r){
+    if(!r.guilds) r.guilds = r.guild?[r.guild]:[];
+    delete r.guild;
+    r.user=Object.assign({name:"나",points:0,streak:0,lastWake:null,history:[],age:"",school:"",work:"",region:"",verified:{},pro:false,onboarded:false,userType:"",grade:"",dday:null,ddayLabel:"",purpose:"",wakeType:"",freezes:1,freezeLastGrant:null,badges:[],bestStreak:0,invites:0,inviteBadges:[],inviteCode:""},r.user);
+    if(!r.user.verified)r.user.verified={};
+    if(!r.user.inviteCode)r.user.inviteCode=genInviteCode();
+    (r.alarms||[]).forEach(a=>{if(!a.missions)a.missions=[{type:a.mission||"math",count:defaultCount(a.mission||"math"),difficulty:"normal"}];
+      if(!a.type)a.type="normal";});
+    (r.guilds||[]).forEach(g=>{if(g.leader===undefined)g.leader=!SAMPLE_GUILDS.some(s=>s.id===g.id);
+      if(g.league===undefined)g.league=1; // 1=브론즈
+      if(g.weekStart===undefined)g.weekStart=mondayOfBoot(todayStrBoot());
+      (g.members||[]).forEach(m=>{if(m.weekScore===undefined)m.weekScore=m.wokeToday?10:0;});
+    });
+    return r;
+  }}catch(e){}
+  return {
+    alarms:[{id:uid(),type:"normal",time:"07:00",label:"기상",days:[1,2,3,4,5],missions:[{type:"math",count:3,difficulty:"normal"}],sound:"bell",bg:"indigo",enabled:true}],
+    customSounds:[],
+    user:{name:"나",points:0,streak:0,lastWake:null,history:[],age:"",school:"",work:"",region:"",verified:{},pro:false,onboarded:false,userType:"",grade:"",dday:null,ddayLabel:"",purpose:"",wakeType:"",freezes:1,freezeLastGrant:null,badges:[],bestStreak:0,invites:0,inviteBadges:[],inviteCode:""},
+    guilds:[]
+  };
+}
+const FREE_ALARMS=2, FREE_GUILDS=1;
+function isPro(){return !!S.user.pro;}
+function requirePro(feat){if(isPro())return true;showPro(feat);return false;}
+function val(id){const e=document.getElementById(id);return e?e.value:"";}
+function save(){try{localStorage.setItem("wakeleague",JSON.stringify(S));}catch(e){}}
+function uid(){return Math.random().toString(36).slice(2,9);}
+function genInviteCode(){const c="ABCDEFGHJKMNPQRSTUVWXYZ23456789";let s="";for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
+function todayStrBoot(){return new Date().toISOString().slice(0,10);}
+function mondayOfBoot(d){const x=new Date(d+"T00:00:00");const wd=(x.getDay()+6)%7;x.setDate(x.getDate()-wd);return x.toISOString().slice(0,10);}
+function allSounds(){return BUILTIN_SOUNDS.concat(S.customSounds);}
+function todayStr(){return new Date().toISOString().slice(0,10);}
+
+/* ============ 네비 ============ */
+let curTab="home";
+function go(name){
+  curTab=name;
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById("s-"+name).classList.add("active");
+  document.querySelectorAll(".nav a").forEach(a=>a.classList.toggle("on",a.dataset.go===name));
+  document.getElementById("fab").style.display = name==="home"?"flex":"none";
+  if(name==="guild")renderGuild();
+  if(name==="rec")renderRec();
+  if(name==="set")renderSet();
+  window.scrollTo(0,0);
+}
+
+/* ============ 홈 / 알람 ============ */
+function renderHome(){
+  document.getElementById("hStreak").textContent=S.user.streak;
+  const dc=document.getElementById("ddayCard");
+  if(dc){
+    let html="";
+    if(S.user.dday){
+      const left=ddayLeft(S.user.dday);
+      html+=`<div class="card" style="background:linear-gradient(135deg,#3a5bff,#7b4bff);" onclick="editDday()">
+        <div class="row between" style="align-items:center;">
+          <div><div style="font-size:12px;opacity:.85;font-weight:700;">${S.user.ddayLabel||"목표일"}까지</div>
+            <div style="font-size:32px;font-weight:900;letter-spacing:-1px;margin-top:2px;">D-${left}</div></div>
+          <div style="font-size:34px;">🎯</div>
+        </div></div>`;
+    }
+    // 프리즈로 살린 안내 (1회)
+    if(S.user.frozenNote){
+      html+=`<div class="card" style="background:rgba(91,124,255,.16);border-color:var(--blue);">
+        <div class="row" style="gap:10px;"><div style="font-size:26px;">❄️</div>
+        <div style="flex:1;"><b>스트릭을 지켰어요!</b><div class="muted" style="font-size:12px;margin-top:2px;">못 일어난 날을 면제권으로 메웠어요. 연속 ${S.user.streak}일 유지 · 남은 면제권 ${S.user.freezes}개</div></div>
+        <div class="iconbtn" onclick="dismissNote('frozenNote')">✕</div></div></div>`;
+    }
+    // 스트릭 끊김 안내 (1회)
+    if(S.user.lostNote){
+      html+=`<div class="card" style="background:rgba(255,93,108,.14);border-color:var(--red);">
+        <div class="row" style="gap:10px;"><div style="font-size:26px;">💔</div>
+        <div style="flex:1;"><b>스트릭이 끊겼어요</b><div class="muted" style="font-size:12px;margin-top:2px;">${S.user.lostNote.streak}일 기록이 멈췄어요. 오늘부터 다시 시작해요!</div></div>
+        <div class="iconbtn" onclick="dismissNote('lostNote')">✕</div></div></div>`;
+    }
+    // 오늘 미기상 + 스트릭 보유 → 손실 경고
+    if(S.user.streak>0 && S.user.lastWake!==todayStr() && !S.user.frozenNote && !S.user.lostNote){
+      html+=`<div class="card" style="background:rgba(255,176,32,.14);border-color:var(--amber);">
+        <div class="row" style="gap:10px;"><div style="font-size:26px;">🔥</div>
+        <div style="flex:1;"><b style="color:var(--amber);">${S.user.streak}일 스트릭이 오늘 끊겨요!</b>
+        <div class="muted" style="font-size:12px;margin-top:2px;">${S.user.freezes>0?`기상 미션을 완료하거나, 면제권 ❄️${S.user.freezes}개로 자동 보호돼요`:"오늘 기상 미션을 완료해 스트릭을 지키세요"}</div></div></div></div>`;
+    }
+    dc.innerHTML=html;
+  }
+  const list=document.getElementById("alarmList");list.innerHTML="";
+  const guildAl=S.alarms.filter(a=>a.type==="guild"), normAl=S.alarms.filter(a=>a.type!=="guild");
+  if(guildAl.length){const h=document.createElement("div");h.className="sectitle";h.textContent="🛡️ 길드 알람";list.appendChild(h);
+    guildAl.forEach(a=>list.appendChild(alarmCard(a)));}
+  const hn=document.createElement("div");hn.className="sectitle";hn.textContent="⏰ 일반 알람";list.appendChild(hn);
+  if(!normAl.length){const e=document.createElement("div");e.className="muted emptybox";e.textContent="＋ 버튼으로 알람을 추가하세요";list.appendChild(e);}
+  normAl.forEach(a=>list.appendChild(alarmCard(a)));
+  const on=S.alarms.filter(a=>a.enabled);
+  if(on.length){
+    on.sort((x,y)=>x.time.localeCompare(y.time));
+    const n=on[0];
+    document.getElementById("nextAlarm").textContent=n.time;
+    const nm=(n.missions||[]).map(x=>MISSIONS[x.type].n).join("+")||"밀어서 끄기";
+    document.getElementById("nextSub").textContent=(n.label||"알람")+" · "+nm;
+  }else{
+    document.getElementById("nextAlarm").textContent="알람 꺼짐";
+    document.getElementById("nextSub").textContent="";
+  }
+}
+function alarmCard(a){
+  const ms=a.missions||[{type:a.mission||"math",count:1}];const bg=BGS[a.bg]||BGS.indigo,snd=allSounds().find(s=>s.id===a.sound);
+  const mLabel=ms.map(missionLabel).join(" ")+(ms.length>1?" ("+ms.length+")":"");
+  const days=a.days.length===7?"매일":a.days.length===0?"한 번":a.days.map(d=>DAYS[d]).join(" ");
+  const el=document.createElement("div");el.className="card";
+  if(a.type==="guild"){
+    const g=getGuild(a.guildId);const time=g?g.time:a.time;const leader=!!(g&&g.leader);
+    el.innerHTML=`
+      <div class="alarm ${a.enabled?"":"off"}">
+        <div onclick="editGuildAlarm('${a.id}')" style="flex:1;">
+          <div class="t">${time} <span style="font-size:13px;color:var(--sub);">🔒</span></div>
+          <div class="meta">🛡️ ${g?g.emoji+" "+g.name:(a.label||"길드")} · ${days}</div>
+        </div>
+        <div class="sw ${a.enabled?"on":""}" onclick="toggleAlarm('${a.id}')"></div>
+      </div>
+      <div class="chiprow">
+        <span class="chip on">${mLabel}</span>
+        <span class="chip">🎵 ${snd?snd.name:"기본"}</span>
+        <span class="chip" onclick="testAlarm('${a.id}')" style="cursor:pointer;border-color:var(--amber);color:var(--amber);">▶ 테스트</span>
+      </div>`;
+  }else{
+    el.innerHTML=`
+      <div class="alarm ${a.enabled?"":"off"}">
+        <div onclick="openAlarmEditor('${a.id}')" style="flex:1;">
+          <div class="t">${a.time}</div>
+          <div class="meta">${a.label||"알람"} · ${days}</div>
+        </div>
+        <div class="sw ${a.enabled?"on":""}" onclick="toggleAlarm('${a.id}')"></div>
+      </div>
+      <div class="chiprow">
+        <span class="chip on">${mLabel}</span>
+        <span class="chip">🎵 ${snd?snd.name:"기본"}</span>
+        <span class="chip">🎨 ${bg.n}</span>
+        <span class="chip" onclick="testAlarm('${a.id}')" style="cursor:pointer;border-color:var(--amber);color:var(--amber);">▶ 테스트</span>
+      </div>`;
+  }
+  return el;
+}
+function gotoGuild(gid){go('guild');renderGuildDetail(gid);}
+function editGuildAlarm(id){openAlarmEditor(id);}
+function toggleAlarm(id){const a=S.alarms.find(x=>x.id===id);a.enabled=!a.enabled;save();renderHome();}
+
+/* ===== 알람 편집 ===== */
+let editingId=null;
+function openAlarmEditor(id){
+  const ed=id?S.alarms.find(x=>x.id===id):null;
+  if(!id && S.alarms.length>=FREE_ALARMS && !isPro()){showPro("알람 무제한");return;}
+  editingId=id||null;
+  const a=ed||{type:"normal",time:"07:00",label:"",days:[1,2,3,4,5],mission:"math",sound:"bell",bg:"indigo"};
+  const isGuildA=a.type==="guild";
+  aeCanEditAll = !isGuildA || !!(getGuild(a.guildId)&&getGuild(a.guildId).leader);
+  document.getElementById("aeTitle").textContent=id?(a.type==="guild"?"길드 알람 편집":"알람 편집"):"알람 추가";
+  const timeEl=document.getElementById("aeTime");timeEl.value=a.time;timeEl.disabled=(a.type==="guild");timeEl.style.opacity=a.type==="guild"?".55":"1";
+  document.getElementById("aeTimeNote").classList.toggle("hide",a.type!=="guild");
+  document.getElementById("aeLabel").value=a.label||"";
+  const dd=document.getElementById("aeDays");dd.innerHTML="";
+  DAYS.forEach((d,i)=>{const e=document.createElement("div");e.className="day"+(a.days.includes(i)?" on":"");e.textContent=d;
+    e.onclick=()=>e.classList.toggle("on");dd.appendChild(e);});
+  aeIsGuild=(a.type==="guild");
+  aeMissionsData=(a.missions&&a.missions.length?a.missions:[{type:a.mission||"math",count:defaultCount(a.mission||"math"),difficulty:"normal"}])
+    .map(m=>({type:m.type,count:m.count||defaultCount(m.type),difficulty:m.difficulty||"normal"}));
+  renderMissionRows();
+  aeSel={sound:a.sound||"bell",bg:a.bg||"indigo"};
+  updatePickRows();
+  const lblEl=document.getElementById("aeLabel");lblEl.disabled=!aeCanEditAll;lblEl.style.opacity=aeCanEditAll?"1":".55";
+  const dEl=document.getElementById("aeDays");dEl.style.pointerEvents=aeCanEditAll?"":"none";dEl.style.opacity=aeCanEditAll?"1":".55";
+  document.getElementById("aeDelete").style.display=(id&&a.type!=="guild")?"block":"none";
+  openModal("alarmModal");
+}
+function saveAlarm(){
+  const days=[...document.querySelectorAll("#aeDays .day")].map((e,i)=>e.classList.contains("on")?i:-1).filter(i=>i>=0);
+  const missions=aeMissionsData.length
+    ? aeMissionsData.map(m=>({type:m.type,count:HAS_COUNT[m.type]?Math.max(1,Math.min(99,m.count||1)):1,difficulty:m.difficulty||"normal"}))
+    : [{type:"none",count:1,difficulty:"normal"}];
+  const data={time:document.getElementById("aeTime").value,label:document.getElementById("aeLabel").value.trim(),
+    days,missions,sound:aeSel.sound,bg:aeSel.bg,enabled:true};
+  if(editingId){const ex=S.alarms.find(x=>x.id===editingId);
+    if(ex.type==="guild"){
+      const g=getGuild(ex.guildId);
+      if(g&&g.leader){data.time=g?g.time:ex.time;delete ex.mission;Object.assign(ex,data);}
+      else{ex.sound=data.sound;ex.bg=data.bg;}
+    } else {delete ex.mission;Object.assign(ex,data);}
+  }
+  else{data.id=uid();data.type="normal";S.alarms.push(data);}
+  save();closeModal("alarmModal");renderHome();toast("알람을 저장했어요");
+}
+let aeMissionsData=[],aeIsGuild=false,aeCanEditAll=true;
+function renderMissionRows(){
+  const c=document.getElementById("aeMissions");c.innerHTML="";
+  const addBtn0=document.getElementById("aeAddBtn");
+  if(!aeCanEditAll){
+    c.innerHTML=`<div class="card" style="margin:0;background:var(--card2);"><div class="muted" style="font-size:12px;margin-bottom:7px;">미션은 길드장이 정해요. 벨소리·배경만 바꿀 수 있어요.</div>${aeMissionsData.map(m=>`<span class="chip on" style="margin:0 4px 4px 0;display:inline-block;">${MISSIONS[m.type].e} ${MISSIONS[m.type].n}${HAS_COUNT[m.type]?" ×"+m.count:""}</span>`).join("")}</div>`;
+    if(addBtn0)addBtn0.style.display="none";return;
+  }
+  aeMissionsData.forEach((m,i)=>{
+    const row=document.createElement("div");
+    row.style.cssText="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;";
+    const opts=Object.entries(MISSIONS).filter(([k])=>(!GUILD_ONLY[k]||aeIsGuild)||m.type===k);
+    const typeSel=`<select onchange="updateMission(${i},'type',this.value)">${opts.map(([k,v])=>`<option value="${k}" ${m.type===k?"selected":""}>${v.e} ${v.n}${GUILD_ONLY[k]?" (길드)":""}</option>`).join("")}</select>`;
+    const diffSel=HAS_DIFF[m.type]?`<select onchange="updateMission(${i},'difficulty',this.value)" style="margin-top:8px;">${Object.entries(DIFFS).map(([k,v])=>`<option value="${k}" ${m.difficulty===k?"selected":""}>난이도: ${v}</option>`).join("")}</select>`:"";
+    const cLbl=({shake:"흔들기 횟수",shakerace:"흔들기 횟수",math:"문제 수",typing:"문장 수",reverse:"문제 수",wordchain:"단어 수",chosung:"문제 수",squat:"스쿼트 횟수",steps:"걸음 수",rhythm:"탭 수",speak:"문장 수",photo:"사진 수",eyeselfie:"셀카 수",relay:"인원 수",groupwait:"대기 인원"})[m.type]||"수행 개수";
+    const cnt=HAS_COUNT[m.type]?`<div class="row" style="gap:8px;align-items:center;margin-top:8px;"><span class="muted" style="font-size:12px;flex:1;">${cLbl}</span><input type="number" min="1" max="99" value="${m.count||1}" onchange="updateMission(${i},'count',this.value)" style="width:78px;text-align:center;"></div>`:"";
+    row.innerHTML=`<div class="row" style="gap:8px;align-items:center;"><div style="flex:1;">${typeSel}</div>${aeMissionsData.length>1?`<div class="iconbtn" onclick="removeMissionRow(${i})">🗑️</div>`:""}</div>${diffSel}${cnt}`;
+    c.appendChild(row);
+  });
+  const addBtn=document.getElementById("aeAddBtn");if(addBtn)addBtn.style.display=aeMissionsData.length>=5?"none":"inline-flex";
+}
+function addMissionRow(){
+  if(aeMissionsData.length>=5){toast("미션은 최대 5개예요");return;}
+  if(aeMissionsData.length>=1 && !isPro()){showPro("미션 여러 개");return;}
+  aeMissionsData.push({type:"math",count:3,difficulty:"normal"});renderMissionRows();
+}
+function removeMissionRow(i){aeMissionsData.splice(i,1);renderMissionRows();}
+function updateMission(i,field,value){
+  if(field==="count")value=Math.max(1,Math.min(99,parseInt(value,10)||1));
+  aeMissionsData[i][field]=value;
+  if(field==="type"){aeMissionsData[i].count=defaultCount(value);aeMissionsData[i].difficulty="normal";}
+  renderMissionRows();
+}
+function deleteAlarm(){if(editingId){S.alarms=S.alarms.filter(x=>x.id!==editingId);save();closeModal("alarmModal");renderHome();}}
+
+/* ============ 사운드 엔진 ============ */
+let actx,soundTimer,voiceAudio,toneIdx=0,voiceSrc=null,voicePlaying=false,voiceBufCache={};
+const TONES={
+  bell:{wave:"sine",freqs:[880,988],dur:.5,interval:650,vol:.35},
+  birds:{wave:"triangle",freqs:[1568,1760,1976,1760],dur:.18,interval:240,vol:.2},
+  digital:{wave:"square",freqs:[660,660,0,880],dur:.12,interval:180,vol:.18},
+  rise:{wave:"sawtooth",freqs:[440,554,659,880],dur:.3,interval:360,vol:.25},
+  arcade:{wave:"square",freqs:[523,659,784,1046,784,659],dur:.13,interval:160,vol:.18},
+};
+function ensureCtx(){if(!actx)actx=new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume();}
+function startSound(sndId){
+  stopSound();
+  const snd=allSounds().find(s=>s.id===sndId)||BUILTIN_SOUNDS[0];
+  if(snd.type==="tts"&&snd.text){if(!speakLoop(snd.text))startSound("rise");return;}
+  if(snd.type==="voice"&&snd.data){playVoiceBuffer(snd);return;}
+  ensureCtx();const cfg=TONES[snd.tone]||TONES.bell;toneIdx=0;
+  const beep=()=>{const f=cfg.freqs[toneIdx%cfg.freqs.length];toneIdx++;if(!f)return;
+    const o=actx.createOscillator(),g=actx.createGain();o.type=cfg.wave;o.frequency.value=f;
+    g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(cfg.vol,actx.currentTime+.02);
+    g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+cfg.dur);
+    o.connect(g).connect(actx.destination);o.start();o.stop(actx.currentTime+cfg.dur+.02);};
+  beep();soundTimer=setInterval(beep,cfg.interval);
+}
+function stopSound(){if(soundTimer){clearInterval(soundTimer);soundTimer=null;}if(voiceAudio){voiceAudio.pause();voiceAudio=null;}
+  voicePlaying=false;if(voiceSrc){try{voiceSrc.stop();}catch(e){}voiceSrc=null;}stopSpeak();}
+let aeSel={sound:"bell",bg:"indigo"};
+function updatePickRows(){
+  const snd=allSounds().find(s=>s.id===aeSel.sound);
+  const sIc=snd?(snd.type==="voice"?"🎙️ ":snd.type==="tts"?"✨ ":"🎵 "):"";
+  const sr=document.getElementById("aeSoundRow");if(sr)sr.innerHTML=`<span>${sIc}${snd?snd.name:"기본"}</span><span class="chev">›</span>`;
+  const bg=BGS[aeSel.bg]||BGS.indigo;
+  const br=document.getElementById("aeBgRow");if(br)br.innerHTML=`<span><span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:${bg.g};vertical-align:-3px;margin-right:8px;"></span>${bg.n}</span><span class="chev">›</span>`;
+}
+function openSoundPicker(){
+  const list=document.getElementById("soundPickerList");list.innerHTML="";
+  allSounds().forEach(s=>{const locked=s.pro&&!isPro(),sel=s.id===aeSel.sound;
+    const ic=s.type==="voice"?"🎙️":s.type==="tts"?"✨":"🎵";
+    const bg=s.type==="tts"?"linear-gradient(135deg,#28c98a,#3a5bff)":s.type==="voice"?"linear-gradient(135deg,#ff6fae,#7b4bff)":"linear-gradient(135deg,#3a5bff,#7b4bff)";
+    const el=document.createElement("div");el.className="mem";el.style.cursor="pointer";
+    el.innerHTML=`<div class="ava" style="background:${bg};">${ic}</div>
+      <div style="flex:1;font-weight:600;">${s.name} ${locked?'<span class="chip" style="border-color:#6b4bb0;color:#c9b6ff;">🔒 Pro</span>':""} ${sel?'<span style="color:var(--green);">✓</span>':""}</div>
+      <button class="btn sm sec" onclick="event.stopPropagation();startSound('${s.id}');setTimeout(stopSound,3000);">▶</button>`;
+    el.onclick=()=>{if(locked){showPro("프리미엄 사운드");return;}aeSel.sound=s.id;updatePickRows();closeModal("soundPickerModal");};
+    list.appendChild(el);});
+  openModal("soundPickerModal");
+}
+function openBgPicker(){
+  const list=document.getElementById("bgPickerList");list.innerHTML="";
+  Object.entries(BGS).forEach(([k,v])=>{const locked=v.pro&&!isPro(),sel=k===aeSel.bg;
+    const el=document.createElement("div");el.className="mem";el.style.cursor="pointer";
+    el.innerHTML=`<div style="width:54px;height:40px;border-radius:9px;background:${v.g};margin-right:11px;border:1px solid var(--line);flex:0 0 auto;"></div>
+      <div style="flex:1;font-weight:600;">${v.n} ${locked?'<span class="chip" style="border-color:#6b4bb0;color:#c9b6ff;">🔒 Pro</span>':""} ${sel?'<span style="color:var(--green);">✓</span>':""}</div>`;
+    el.onclick=()=>{if(locked){showPro("프리미엄 배경");return;}aeSel.bg=k;updatePickRows();closeModal("bgPickerModal");};
+    list.appendChild(el);});
+  openModal("bgPickerModal");
+}
+let callTo=null;
+function openCallSend(gid){const g=getGuild(gid);if(!g)return;
+  if(!requirePro("음성 모닝콜 보내기"))return;
+  const others=g.members.filter(m=>!m.me&&!m.wokeToday);
+  if(!others.length){toast("지금은 길드원이 모두 일어났어요 ☀️");return;}
+  callTo=others[0].name;
+  const cm=document.getElementById("callMembers");cm.innerHTML="";
+  others.forEach(m=>{const c=document.createElement("span");c.className="chip"+(m.name===callTo?" on":"");c.textContent=m.name;
+    c.onclick=()=>{cm.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));c.classList.add("on");callTo=m.name;};cm.appendChild(c);});
+  const cs=S.customSounds,cl=document.getElementById("callSounds");cl.innerHTML="";
+  if(!cs.length)cl.innerHTML='<div class="muted" style="font-size:13px;padding:8px 2px;">아직 만든 모닝콜이 없어요</div>';
+  else cs.forEach(s=>{const ic=s.type==="tts"?"✨":"🎙️";const el=document.createElement("div");el.className="mem";
+    el.innerHTML=`<div class="ava" style="background:${s.type==="tts"?"linear-gradient(135deg,#28c98a,#3a5bff)":"linear-gradient(135deg,#ff6fae,#7b4bff)"};">${ic}</div>
+      <div style="flex:1;font-weight:600;">${s.name}</div>
+      <button class="btn sm sec" onclick="startSound('${s.id}');setTimeout(stopSound,3000);">▶</button>
+      <button class="btn sm" style="margin-left:6px;" onclick="sendCall('${s.id}')">보내기</button>`;
+    cl.appendChild(el);});
+  openModal("callSendModal");
+}
+function sendCall(soundId){if(!callTo){toast("받는 사람을 선택하세요");return;}
+  const s=allSounds().find(x=>x.id===soundId);closeModal("callSendModal");
+  toast("🎙️ "+callTo+"님에게 보냈어요!");}
+function sendOnce(){if(!callTo){toast("받는 사람을 선택하세요");return;}
+  const t=val("callOnceText").trim();if(!t){toast("메시지를 입력하세요");return;}
+  closeModal("callSendModal");toast("⚡ "+callTo+"님에게 보냈어요!");}
+function playVoiceBuffer(snd){
+  ensureCtx();
+  const rate=snd.effect==="cat"?1.65:snd.effect==="dog"?0.6:1;
+  const start=(buf)=>{voicePlaying=true;const play=()=>{if(!voicePlaying)return;
+    const s=actx.createBufferSource();s.buffer=buf;s.playbackRate.value=rate;
+    s.connect(actx.destination);s.onended=()=>{if(voicePlaying)setTimeout(play,400);};s.start();voiceSrc=s;};play();};
+  if(voiceBufCache[snd.id]){start(voiceBufCache[snd.id]);return;}
+  fetch(snd.data).then(r=>r.arrayBuffer()).then(a=>actx.decodeAudioData(a)).then(buf=>{voiceBufCache[snd.id]=buf;start(buf);})
+    .catch(()=>{voiceAudio=new Audio(snd.data);voiceAudio.loop=true;voiceAudio.play().catch(()=>{});});
+}
+
+/* ============ 받는 입장 체험 ============ */
+const CALL_MSGS=[
+  "야! 일어나! 지금 안 일어나면 지각이야!",
+  "굿모닝! 우리 길드 오늘도 같이 일어나자!",
+  "얼른 일어나, 너 때문에 길드 기록 끊긴다!",
+  "기상 시간이야! 빨리 미션 깨고 인증하자!"
+];
+let demoTimers=[],ttsActive=false;
+function buzz(p){try{if(navigator.vibrate)navigator.vibrate(p);}catch(e){}}
+function startWakeDemo(gid){
+  const g=gid?getGuild(gid):(S.guilds[0]||null);
+  const f=g&&g.members.find(m=>!m.me);
+  const friend=f?f.name:"민준";
+  const sl=document.getElementById("sleep");sl.classList.add("show");
+  document.getElementById("sleepSub").textContent=friend+"님이 곧 깨웁니다";
+  demoTimers.forEach(clearTimeout);demoTimers=[];
+  demoTimers.push(setTimeout(()=>showPush("👉",friend+"님이 콕 찔렀어요!","일어나라고 콕! 콕!"),2500));
+  demoTimers.push(setTimeout(()=>showPush("👊",friend+"님이 또 찔렀어요!","얼른 일어나!!"),5200));
+  demoTimers.push(setTimeout(()=>incomingVoiceCall(friend),8200));
+}
+function wakeDemoCancel(){demoTimers.forEach(clearTimeout);hidePush();
+  document.getElementById("sleep").classList.remove("show");
+  document.getElementById("ring").classList.remove("show");stopSound();}
+function showPush(emoji,title,body){
+  const p=document.getElementById("push");
+  document.getElementById("pushAva").textContent=emoji;
+  document.getElementById("pushTitle").textContent=title;
+  document.getElementById("pushBody").textContent=body;
+  p.classList.add("show");buzz([0,200,90,200]);
+  clearTimeout(p._t);p._t=setTimeout(()=>p.classList.remove("show"),3800);
+}
+function hidePush(){document.getElementById("push").classList.remove("show");}
+
+function incomingVoiceCall(friend){
+  hidePush();document.getElementById("sleep").classList.remove("show");
+  const text=CALL_MSGS[Math.floor(Math.random()*CALL_MSGS.length)];
+  currentAlarm={time:new Date().toTimeString().slice(0,5),label:friend+"님의 음성 모닝콜",bg:"sunrise",missions:[{type:"none",count:1}],sound:"__tts",__tts:text,__from:friend};
+  const ring=document.getElementById("ring");ring.style.background=BGS.sunrise.g;
+  document.getElementById("ringTime").textContent="📞";
+  document.getElementById("ringLabel").textContent=friend+"님의 음성 모닝콜";
+  ring.classList.add("show");
+  document.getElementById("snoozeBtn").style.display="none";
+  buzz([0,400,200,400,200,400]);
+  document.getElementById("missionBox").innerHTML=
+    `<h3>🎙️ 음성 모닝콜이 왔어요</h3><div class="muted" style="margin-bottom:14px;">${friend}님이 깨우려고 전화했어요</div>
+     <button class="btn" style="background:var(--green);" onclick="answerCall()">📲 받기</button>`;
+}
+function answerCall(){
+  const text=currentAlarm.__tts,friend=currentAlarm.__from;
+  if(!speakLoop(text))startSound("rise");
+  buzz([0,300]);
+  document.getElementById("ringTime").textContent="🎙️";
+  document.getElementById("snoozeBtn").style.display="block";
+  document.getElementById("missionBox").innerHTML=
+    `<h3>💬 "${text}"</h3><div class="muted" style="margin-bottom:12px;">${friend}님의 목소리가 울리고 있어요</div>
+     <button class="btn" onclick="dismiss()">일어났어요! 🙌</button>
+     <button class="btn sec" style="margin-top:8px;background:rgba(255,255,255,.2);border:none;color:#fff;" onclick="replayCall()">🔁 다시 듣기</button>`;
+}
+function replayCall(){if(currentAlarm&&currentAlarm.__tts){stopSpeak();speakLoop(currentAlarm.__tts);}}
+function speakLoop(text){
+  if(!("speechSynthesis"in window))return false;
+  ttsActive=true;
+  const go=()=>{if(!ttsActive)return;const u=new SpeechSynthesisUtterance(text);u.lang="ko-KR";u.rate=1.02;u.pitch=1.15;
+    u.onend=()=>{if(ttsActive)setTimeout(go,900);};
+    try{window.speechSynthesis.cancel();window.speechSynthesis.speak(u);}catch(e){}};
+  go();return true;
+}
+function stopSpeak(){ttsActive=false;try{if("speechSynthesis"in window)window.speechSynthesis.cancel();}catch(e){}}
+
+/* ============ 알람 엔진 ============ */
+let lastTick="";
+setInterval(()=>{
+  const d=new Date();const hm=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+  const key=hm+"|"+d.getDay();
+  if(key===lastTick)return;
+  if(document.getElementById("ring").classList.contains("show"))return;
+  const due=S.alarms.find(a=>a.enabled&&a.time===hm&&(a.days.length===0||a.days.includes(d.getDay())));
+  if(due&&lastTick.slice(0,5)!==hm){lastTick=key;fireAlarm(due);}
+  else lastTick=key;
+},1000);
+
+let currentAlarm=null, pendingPhoto=null;
+function testAlarm(id){fireAlarm(S.alarms.find(a=>a.id===id));}
+function fireAlarm(a){
+  currentAlarm=a;ensureCtx();
+  const ring=document.getElementById("ring");
+  ring.style.background=BGS[a.bg].g;
+  document.getElementById("ringTime").textContent=a.time;
+  document.getElementById("ringLabel").textContent=a.label||"기상 시간이에요!";
+  ring.classList.add("show");
+  startSound(a.sound);
+  document.getElementById("snoozeBtn").style.display="block";
+  startMissions(a.missions||[{type:a.mission||"none",count:1,difficulty:"normal"}]);
+}
+function snooze(){stopSound();document.getElementById("ring").classList.remove("show");
+  toast("5분 후 다시 울려요");setTimeout(()=>fireAlarm(currentAlarm),5*60*1000);}
+function dismiss(){
+  stopSound();document.getElementById("ring").classList.remove("show");
+  recordWake();
+}
+
+/* ===== 미션 ===== */
+let missionList=[],missionIdx=0;
+function startMissions(missions){missionList=(missions&&missions.length)?missions:[{type:"none",count:1}];missionIdx=0;pendingPhoto=null;runMission();}
+function runMission(){if(missionIdx>=missionList.length){dismiss();return;}loadMission(missionList[missionIdx]);}
+function nextMission(){missionIdx++;runMission();}
+function seqTag(){return missionList.length>1?` <span style="opacity:.75;font-size:14px;">(${missionIdx+1}/${missionList.length})</span>`:"";}
+function mathProblem(diff){const ri=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+  if(diff==="easy"){const a=ri(1,9),b=ri(1,9);return{q:`${a} + ${b}`,a:a+b};}
+  if(diff==="hard"){if(Math.random()<.5){const a=ri(11,19),b=ri(3,9);return{q:`${a} × ${b}`,a:a*b};}
+    const a=ri(6,20),b=ri(6,20),c=ri(2,9);return{q:`${a} + ${b} + ${c}`,a:a+b+c};}
+  const a=ri(2,9),b=ri(2,9);return{q:`${a} × ${b}`,a:a*b};}
+function typingSentence(diff){
+  const E=["좋은 아침","오늘도 화이팅","드디어 일어났다"];
+  const H=["미래의 내가 지금의 나에게 고맙다고 말할 거야","아침을 지배하는 사람이 하루를 지배한다"];
+  const arr=diff==="easy"?E:diff==="hard"?H:SENTENCES;return arr[Math.floor(Math.random()*arr.length)];}
+const CHO=["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
+function chosungOf(s){let r="";for(const ch of s){const c=ch.charCodeAt(0)-0xAC00;r+=(c>=0&&c<11172)?CHO[Math.floor(c/588)]:ch;}return r;}
+const WORDS=["사과","나무","바다","구름","학교","기상","아침","친구","행복","도전","노력","열정","미래","성공","건강","운동","공부","우정","사랑","희망","하늘","바람"];
+const CHOSUNG_WORDS=["기상","아침","친구","학교","사과","바다","구름","행복","도전","노력","열정","미래","건강","운동"];
+function enableMotion(h){if(typeof DeviceMotionEvent!=="undefined"&&typeof DeviceMotionEvent.requestPermission==="function"){
+    DeviceMotionEvent.requestPermission().then(p=>{if(p==="granted")window.addEventListener("devicemotion",h);}).catch(()=>{});
+  }else if(window.DeviceMotionEvent){window.addEventListener("devicemotion",h);}}
+function postVow(text,audio){S.guilds.forEach(g=>{g.feed=g.feed||[];g.feed.unshift({by:"나",vow:text,audio:audio||null,time:new Date().toTimeString().slice(0,5),date:todayStr()});g.feed=g.feed.slice(0,9);});save();}
+
+function loadMission(ms){
+  const box=document.getElementById("missionBox");
+  const type=ms.type,need=HAS_COUNT[type]?(ms.count||1):1,diff=ms.difficulty||"normal",tag=seqTag();
+  if(type==="none"){box.innerHTML=`<h3>밀어서 알람 끄기${tag}</h3><button class="btn" onclick="nextMission()">알람 끄기</button>`;return;}
+  if(type==="math"){let solved=0;
+    const make=()=>{const r=mathProblem(diff);
+      box.innerHTML=`<h3>➗ 수학 (${solved}/${need})${tag}</h3><div class="bignum">${r.q} = ?</div>
+        <input type="text" id="mAns" inputmode="numeric" placeholder="정답 입력" style="text-align:center;font-size:20px;">
+        <button class="btn" style="margin-top:12px;" onclick="checkMath(${r.a})">확인</button>`;
+      const el=document.getElementById("mAns");if(el)el.focus();
+      window.checkMath=(c)=>{const v=parseInt(document.getElementById("mAns").value,10);
+        if(v===c){solved++;if(solved>=need)nextMission();else make();}else{toast("틀렸어요!");document.getElementById("mAns").value="";}};};
+    make();return;}
+  if(type==="typing"){let done=0;
+    const make=()=>{const s=typingSentence(diff);
+      box.innerHTML=`<h3>⌨️ 따라 입력 (${done}/${need})${tag}</h3><div class="bignum" style="font-size:19px;">"${s}"</div>
+        <input type="text" id="mType" placeholder="위 문장을 똑같이 입력">
+        <button class="btn" style="margin-top:12px;" onclick="checkType()">확인</button>`;
+      window.checkType=()=>{if(document.getElementById("mType").value.trim()===s){done++;if(done>=need)nextMission();else make();}else toast("문장이 달라요");};};
+    make();return;}
+  if(type==="shake"){const target=need;let cnt=0;
+    box.innerHTML=`<h3>📳 흔들기${tag}</h3><div class="bignum"><span id="shN">0</span> / ${target}</div>
+      <div class="progress"><div id="shBar"></div></div>
+      <button class="btn sec" style="background:rgba(255,255,255,.2);border:none;color:#fff;" id="tapBtn">흔들기 어려우면 탭!</button>`;
+    const bump=()=>{cnt++;document.getElementById("shN").textContent=Math.min(cnt,target);
+      document.getElementById("shBar").style.width=Math.min(100,cnt/target*100)+"%";
+      if(cnt>=target){window.removeEventListener("devicemotion",mh);nextMission();}};
+    document.getElementById("tapBtn").onclick=bump;
+    let last={x:0,y:0,z:0},lt=0;
+    function mh(e){const a=e.accelerationIncludingGravity||e.acceleration;if(!a)return;const now=Date.now();if(now-lt<120)return;lt=now;
+      const m=Math.abs(a.x-last.x)+Math.abs(a.y-last.y)+Math.abs(a.z-last.z);last={x:a.x,y:a.y,z:a.z};if(m>22)bump();}
+    if(typeof DeviceMotionEvent!=="undefined"&&typeof DeviceMotionEvent.requestPermission==="function"){
+      DeviceMotionEvent.requestPermission().then(p=>{if(p==="granted")window.addEventListener("devicemotion",mh);}).catch(()=>{});
+    }else if(window.DeviceMotionEvent){window.addEventListener("devicemotion",mh);}
+    return;}
+  if(type==="reverse"){let done=0;const len=diff==="easy"?3:diff==="hard"?6:4;
+    const make=()=>{const num=Array.from({length:len},()=>Math.floor(Math.random()*10)).join("");const rev=num.split("").reverse().join("");
+      box.innerHTML=`<h3>🔢 거꾸로 입력 (${done}/${need})${tag}</h3><div class="bignum" style="letter-spacing:4px;">${num}</div>
+        <div class="muted" style="margin-bottom:8px;">위 숫자를 거꾸로 입력</div>
+        <input type="text" id="mRev" inputmode="numeric" style="text-align:center;font-size:20px;"><button class="btn" style="margin-top:12px;" onclick="window._rev()">확인</button>`;
+      window._rev=()=>{if(document.getElementById("mRev").value.trim()===rev){done++;if(done>=need)nextMission();else make();}else{toast("틀렸어요!");document.getElementById("mRev").value="";}};};
+    make();return;}
+  if(type==="wordchain"){let done=0,cur=WORDS[Math.floor(Math.random()*WORDS.length)],used=[cur];
+    const ui=()=>{const req=cur.trim().slice(-1);
+      box.innerHTML=`<h3>🔗 끝말잇기 (${done}/${need})${tag}</h3><div class="bignum" style="font-size:24px;">${cur}</div>
+        <div class="muted" style="margin-bottom:8px;">'${req}'(으)로 시작하는 단어</div>
+        <input type="text" id="mWc"><button class="btn" style="margin-top:12px;" onclick="window._wc()">확인</button>`;
+      window._wc=()=>{const v=document.getElementById("mWc").value.trim();
+        if(v.length<2){toast("두 글자 이상");return;} if(v[0]!==req){toast("'"+req+"'(으)로 시작해야 해요");return;}
+        if(used.includes(v)){toast("이미 쓴 단어예요");return;} used.push(v);cur=v;done++;if(done>=need)nextMission();else ui();};};
+    ui();return;}
+  if(type==="chosung"){let done=0;
+    const make=()=>{const w=CHOSUNG_WORDS[Math.floor(Math.random()*CHOSUNG_WORDS.length)],cs=chosungOf(w);
+      box.innerHTML=`<h3>🔡 초성 퀴즈 (${done}/${need})${tag}</h3><div class="bignum" style="letter-spacing:6px;">${cs}</div>
+        <div class="muted" style="margin-bottom:8px;">초성에 맞는 단어</div>
+        <input type="text" id="mCs"><button class="btn" style="margin-top:12px;" onclick="window._cs()">확인</button>
+        <button class="btn sec" style="margin-top:6px;background:rgba(255,255,255,.15);border:none;color:#fff;" onclick="toast('힌트: ${w[0]}…')">힌트</button>`;
+      window._cs=()=>{const v=document.getElementById("mCs").value.trim();
+        if(v.length===cs.length&&chosungOf(v)===cs){done++;if(done>=need)nextMission();else make();}else toast("초성이 맞지 않아요");};};
+    make();return;}
+  if(type==="squat"){const target=need;let cnt=0,phase="up",baseY=null;
+    box.innerHTML=`<h3>🏋️ 스쿼트${tag}</h3><div class="bignum"><span id="sqN">0</span> / ${target}</div><div class="progress"><div id="sqBar"></div></div>
+      <div class="muted" style="margin:8px 0;">폰을 들고 앉았다 일어나기</div>
+      <button class="btn sec" style="background:rgba(255,255,255,.2);border:none;color:#fff;" id="sqTap">못 하면 탭</button>`;
+    const bump=()=>{cnt++;document.getElementById("sqN").textContent=Math.min(cnt,target);document.getElementById("sqBar").style.width=Math.min(100,cnt/target*100)+"%";if(cnt>=target){window.removeEventListener("devicemotion",mh);nextMission();}};
+    document.getElementById("sqTap").onclick=bump;
+    function mh(e){const a=e.accelerationIncludingGravity;if(!a)return;const y=a.y;if(baseY===null){baseY=y;return;}
+      if(phase==="up"&&y<baseY-4)phase="down";else if(phase==="down"&&y>baseY+2){phase="up";bump();}}
+    enableMotion(mh);return;}
+  if(type==="steps"){const target=need;let cnt=0,lt=0;
+    box.innerHTML=`<h3>🚶 걷기${tag}</h3><div class="bignum"><span id="stN">0</span> / ${target} 걸음</div><div class="progress"><div id="stBar"></div></div>
+      <div class="muted" style="margin:8px 0;">폰을 들고 걸어보세요</div>
+      <button class="btn sec" style="background:rgba(255,255,255,.2);border:none;color:#fff;" id="stTap">제자리 걷기 어려우면 탭</button>`;
+    const bump=()=>{cnt++;document.getElementById("stN").textContent=Math.min(cnt,target);document.getElementById("stBar").style.width=Math.min(100,cnt/target*100)+"%";if(cnt>=target){window.removeEventListener("devicemotion",mh);nextMission();}};
+    document.getElementById("stTap").onclick=bump;
+    function mh(e){const a=e.accelerationIncludingGravity||e.acceleration;if(!a)return;const now=Date.now();if(now-lt<300)return;const mag=Math.sqrt(a.x*a.x+a.y*a.y+a.z*a.z);if(mag>13){lt=now;bump();}}
+    enableMotion(mh);return;}
+  if(type==="shakerace"){const target=need;let cnt=0,timeLeft=10,lt=0,last={x:0,y:0,z:0},tmr;
+    const upd=()=>{const n=document.getElementById("srN"),t=document.getElementById("srT"),b=document.getElementById("srBar");if(n)n.textContent=cnt;if(t)t.textContent=timeLeft;if(b)b.style.width=Math.min(100,cnt/target*100)+"%";};
+    const bump=()=>{cnt++;upd();if(cnt>=target){clearInterval(tmr);window.removeEventListener("devicemotion",mh);nextMission();}};
+    box.innerHTML=`<h3>⚡ 흔들기 레이스${tag}</h3><div class="bignum"><span id="srN">0</span>/${target} · ⏱️<span id="srT">10</span>s</div><div class="progress"><div id="srBar"></div></div>
+      <div class="muted" style="margin:8px 0;">제한시간 안에 빠르게!</div>
+      <button class="btn sec" style="background:rgba(255,255,255,.2);border:none;color:#fff;" id="srTap">탭 연타</button>`;
+    document.getElementById("srTap").onclick=bump;
+    function mh(e){const a=e.accelerationIncludingGravity||e.acceleration;if(!a)return;const now=Date.now();if(now-lt<90)return;lt=now;const m=Math.abs(a.x-last.x)+Math.abs(a.y-last.y)+Math.abs(a.z-last.z);last={x:a.x,y:a.y,z:a.z};if(m>20)bump();}
+    enableMotion(mh);
+    tmr=setInterval(()=>{timeLeft--;upd();if(timeLeft<=0){cnt=0;timeLeft=10;toast("시간 초과! 다시!");upd();}},1000);return;}
+  if(type==="rhythm"){const target=need;let hits=0,onBeat=false;
+    box.innerHTML=`<h3 id="rhyH">🥁 리듬 탭 (0/${target})${tag}</h3>
+      <div id="rhyDot" style="width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.2);margin:18px auto;transition:transform .15s,background .15s;"></div>
+      <div class="muted">원이 커질 때 탭!</div><button class="btn" style="margin-top:12px;" id="rhyBtn">탭</button>`;
+    const dot=document.getElementById("rhyDot");
+    const beat=setInterval(()=>{onBeat=true;dot.style.background="#fff";dot.style.transform="scale(1.25)";setTimeout(()=>{onBeat=false;dot.style.background="rgba(255,255,255,.2)";dot.style.transform="scale(1)";},350);},900);
+    document.getElementById("rhyBtn").onclick=()=>{if(onBeat){hits++;document.getElementById("rhyH").textContent=`🥁 리듬 탭 (${hits}/${target})`;if(hits>=target){clearInterval(beat);nextMission();}}else toast("박자를 놓쳤어요");};
+    return;}
+  if(type==="maze"){const grid=["S....","####.",".....",".####","....E"];let pr=0,pc=0,lastT=0;
+    const draw=()=>{let h=`<h3>🌀 미로 탈출${tag}</h3><div style="display:inline-block;margin:8px auto;">`;
+      grid.forEach((row,r)=>{h+="<div style='display:flex;'>";for(let c=0;c<row.length;c++){const cell=row[c],me=(r===pr&&c===pc);
+        h+=`<div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:20px;background:${cell==="#"?"#3a3f66":me?"transparent":"rgba(255,255,255,.08)"};border:1px solid #ffffff14;border-radius:6px;">${me?"🔵":cell==="E"?"🏁":""}</div>`;}h+="</div>";});
+      h+=`</div><div class="muted">폰을 기울여 🔵를 🏁로!</div>
+        <div style="display:grid;grid-template-columns:repeat(3,48px);gap:6px;justify-content:center;margin-top:10px;">
+        <span></span><button class="btn sec" style="padding:9px;" onclick="mazeMove(-1,0)">▲</button><span></span>
+        <button class="btn sec" style="padding:9px;" onclick="mazeMove(0,-1)">◀</button><span></span><button class="btn sec" style="padding:9px;" onclick="mazeMove(0,1)">▶</button>
+        <span></span><button class="btn sec" style="padding:9px;" onclick="mazeMove(1,0)">▼</button><span></span></div>`;
+      box.innerHTML=h;};
+    window.mazeMove=(dr,dc)=>{const nr=pr+dr,nc=pc+dc;if(nr<0||nc<0||nr>=grid.length||nc>=grid[0].length)return;if(grid[nr][nc]==="#")return;pr=nr;pc=nc;
+      if(grid[nr][nc]==="E"){window.removeEventListener("deviceorientation",oh);nextMission();return;}draw();};
+    function oh(e){const now=Date.now();if(now-lastT<350)return;const g=e.gamma||0,b=e.beta||0;let mv=false;
+      if(g>15){window.mazeMove(0,1);mv=true;}else if(g<-15){window.mazeMove(0,-1);mv=true;}else if(b>30){window.mazeMove(1,0);mv=true;}else if(b<8){window.mazeMove(-1,0);mv=true;}
+      if(mv)lastT=now;}
+    draw();
+    if(typeof DeviceOrientationEvent!=="undefined"&&typeof DeviceOrientationEvent.requestPermission==="function"){DeviceOrientationEvent.requestPermission().then(p=>{if(p==="granted")window.addEventListener("deviceorientation",oh);}).catch(()=>{});}else if(window.DeviceOrientationEvent){window.addEventListener("deviceorientation",oh);}
+    return;}
+  if(type==="shout"){let filled=0,finished=false,stream=null,raf=null;
+    box.innerHTML=`<h3>📢 소리쳐서 깨우기${tag}</h3><div class="muted" style="margin-bottom:8px;">"일어나!"를 크게 외쳐 게이지를 채우세요</div>
+      <div class="progress" style="height:22px;"><div id="shoutBar" style="background:var(--amber);"></div></div>
+      <div id="shoutMsg" class="muted" style="margin-top:10px;">마이크 권한을 허용해주세요</div>
+      <button class="btn sec" style="margin-top:10px;background:rgba(255,255,255,.15);border:none;color:#fff;" id="shoutTap">소리 못 낼 땐 탭</button>`;
+    const finish=()=>{if(finished)return;finished=true;if(stream)stream.getTracks().forEach(t=>t.stop());if(raf)cancelAnimationFrame(raf);nextMission();};
+    const setBar=()=>{const b=document.getElementById("shoutBar");if(b)b.style.width=Math.min(100,filled)+"%";};
+    document.getElementById("shoutTap").onclick=()=>{filled+=22;setBar();if(filled>=100)finish();};
+    if(navigator.mediaDevices)navigator.mediaDevices.getUserMedia({audio:true}).then(s=>{stream=s;const ac=new (window.AudioContext||window.webkitAudioContext)();const src=ac.createMediaStreamSource(s);const an=ac.createAnalyser();an.fftSize=512;src.connect(an);const data=new Uint8Array(an.frequencyBinCount);document.getElementById("shoutMsg").textContent="크게 외쳐보세요! 🔊";
+      const loop=()=>{if(finished)return;an.getByteFrequencyData(data);let sum=0;for(const v of data)sum+=v;const avg=sum/data.length;if(avg>45)filled+=Math.min(6,(avg-45)/6);setBar();if(filled>=100){finish();return;}raf=requestAnimationFrame(loop);};loop();
+    }).catch(()=>{document.getElementById("shoutMsg").textContent="마이크를 쓸 수 없어요. 탭으로 진행하세요";});
+    return;}
+  if(type==="speak"){let done=0;const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    const make=()=>{const s=typingSentence(diff),flat=s.replace(/\s/g,"");
+      box.innerHTML=`<h3>🗣️ 따라 말하기 (${done}/${need})${tag}</h3><div class="bignum" style="font-size:20px;">"${s}"</div>
+        <div id="spMsg" class="muted" style="margin-bottom:8px;">버튼을 누르고 또박또박 말하세요</div>
+        <button class="btn" id="spBtn">🎤 말하기 시작</button>
+        <button class="btn sec" style="margin-top:6px;background:rgba(255,255,255,.15);border:none;color:#fff;" onclick="document.getElementById('spTypeWrap').classList.remove('hide')">음성 안 될 때 타이핑</button>
+        <div id="spTypeWrap" class="hide" style="margin-top:8px;"><input type="text" id="spIn"><button class="btn" style="margin-top:6px;" onclick="window._spChk()">확인</button></div>`;
+      const adv=()=>{done++;if(done>=need)nextMission();else make();};
+      window._spChk=()=>{if(document.getElementById("spIn").value.trim().replace(/\s/g,"")===flat)adv();else toast("문장이 달라요");};
+      if(SR){const rec=new SR();rec.lang="ko-KR";rec.onresult=(e)=>{const t=e.results[0][0].transcript.replace(/\s/g,"");document.getElementById("spMsg").textContent="들린 말: "+e.results[0][0].transcript;if(t===flat||t.includes(flat.slice(0,Math.max(2,Math.floor(flat.length/2))))) adv(); else toast("다시 또박또박!");};
+        rec.onerror=()=>{document.getElementById("spMsg").textContent="음성 인식 오류. 타이핑을 이용하세요";document.getElementById("spTypeWrap").classList.remove("hide");};
+        document.getElementById("spBtn").onclick=()=>{document.getElementById("spMsg").textContent="듣는 중... 🎤";try{rec.start();}catch(e){}};}
+      else document.getElementById("spBtn").onclick=()=>{document.getElementById("spMsg").textContent="이 브라우저는 음성인식 미지원. 타이핑 이용";document.getElementById("spTypeWrap").classList.remove("hide");};};
+    make();return;}
+  if(type==="vow"){
+    box.innerHTML=`<h3>🎙️ 오늘의 다짐${tag}</h3><div class="muted" style="margin-bottom:8px;">"오늘 ~할 거야!" 다짐을 길드에 공유하세요</div>
+      <button class="btn" id="vowRec">🔴 3초 녹음</button>
+      <button class="btn sec" style="margin-top:6px;background:rgba(255,255,255,.15);border:none;color:#fff;" onclick="document.getElementById('vowTypeWrap').classList.remove('hide')">녹음 대신 텍스트로</button>
+      <div id="vowTypeWrap" class="hide" style="margin-top:8px;"><input type="text" id="vowIn" placeholder="오늘의 다짐"><button class="btn" style="margin-top:6px;" onclick="window._vowSub()">공유하고 끄기</button></div>`;
+    window._vowSub=()=>{postVow(val("vowIn").trim()||"오늘도 파이팅!",null);toast("길드에 공유했어요!");nextMission();};
+    document.getElementById("vowRec").onclick=async()=>{const btn=document.getElementById("vowRec");
+      try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});const mr=new MediaRecorder(stream);const cks=[];
+        mr.ondataavailable=e=>cks.push(e.data);mr.onstop=()=>{const fr=new FileReader();fr.onload=()=>{postVow("음성 다짐 🎙️",fr.result);stream.getTracks().forEach(t=>t.stop());toast("길드에 공유했어요!");nextMission();};fr.readAsDataURL(new Blob(cks));};
+        let n=3;btn.disabled=true;btn.textContent="🔴 "+n;const iv=setInterval(()=>{n--;btn.textContent=n>0?"🔴 "+n:"처리…";if(n<=0)clearInterval(iv);},1000);
+        mr.start();setTimeout(()=>{if(mr.state!=="inactive")mr.stop();},3000);}
+      catch(e){toast("마이크 권한 필요. 텍스트로 진행하세요");document.getElementById("vowTypeWrap").classList.remove("hide");}};
+    return;}
+  if(type==="eyeselfie"){let done=0;
+    const ui=()=>{box.innerHTML=`<h3>👀 눈 뜬 셀카 (${done}/${need})${tag}</h3><div class="muted" style="margin-bottom:12px;">눈 크게 뜬 셀카를 찍으세요</div>
+      <input type="file" accept="image/*" capture="user" id="mPhoto" style="display:none;">
+      <button class="btn" onclick="document.getElementById('mPhoto').click()">🤳 셀카 촬영</button><div id="photoPrev" style="margin-top:12px;"></div>`;
+      document.getElementById("mPhoto").onchange=function(){photoCapture(this,(url)=>{pendingPhoto=url;done++;if(done>=need)nextMission();else{toast("좋아요!");ui();}});};};
+    ui();return;}
+  if(type==="relay"){const g=S.guilds[0];const fr=(g&&g.members.find(m=>!m.me&&!m.wokeToday))||(g&&g.members.find(m=>!m.me))||{name:"민준"};
+    box.innerHTML=`<h3>🏃 릴레이 깨우기${tag}</h3><div style="font-size:46px;margin:8px;">📣</div><div class="muted" style="margin-bottom:10px;">다음 타자 <b style="color:#fff">${fr.name}</b>님을 깨우면 완료!</div>
+      <button class="btn" onclick="window._relay('${fr.name}')">👉 ${fr.name}님 깨우기</button>`;
+    window._relay=(nm)=>{if(g){const m=g.members.find(x=>x.name===nm);if(m&&!m.wokeToday){m.wokeToday=true;m.streak++;g.todayCount=(g.todayCount||0)+1;}save();}toast("🎉 "+nm+"님을 깨웠어요!");nextMission();};
+    return;}
+  if(type==="groupwait"){const targetN=need>1?need:5;const g=S.guilds[0];let woke=g?g.members.filter(m=>m.wokeToday).length:1;if(woke<1)woke=1;
+    box.innerHTML=`<h3>⏳ 단체 출석${tag}</h3><div class="bignum"><span id="gwN">${woke}</span> / ${targetN}명</div><div class="progress"><div id="gwBar" style="width:${Math.min(100,woke/targetN*100)}%"></div></div>
+      <div class="muted" style="margin-top:8px;">길드원들이 일어나는 중...</div>`;
+    const iv=setInterval(()=>{woke++;const n=document.getElementById("gwN");if(!n){clearInterval(iv);return;}n.textContent=woke;document.getElementById("gwBar").style.width=Math.min(100,woke/targetN*100)+"%";if(woke>=targetN){clearInterval(iv);setTimeout(nextMission,500);}},850);
+    return;}
+  if(type==="pokerespond"){const g=S.guilds[0];const fr=(g&&g.members.find(m=>!m.me))||{name:"민준"};buzz([0,300,150,300]);
+    box.innerHTML=`<h3>👉 콕 응답${tag}</h3><div style="font-size:50px;margin:10px;" class="bell">👉</div><div class="muted" style="margin-bottom:10px;"><b style="color:#fff">${fr.name}</b>님이 콕 찔렀어요!</div>
+      <button class="btn" onclick="nextMission()">✋ 일어났어! 응답하기</button>`;
+    return;}
+  if(type==="photo"){let done=0;
+    const ui=()=>{box.innerHTML=`<h3>📸 사진 인증 (${done}/${need})${tag}</h3><div class="muted" style="margin-bottom:12px;">책상 앞 착석 / 출근 준비 사진을 찍어 올리세요</div>
+      <input type="file" accept="image/*" capture="environment" id="mPhoto" style="display:none;">
+      <button class="btn" onclick="document.getElementById('mPhoto').click()">📷 사진 촬영 / 선택</button>
+      <div id="photoPrev" style="margin-top:12px;"></div>`;
+      document.getElementById("mPhoto").onchange=function(){photoCapture(this,(url)=>{pendingPhoto=url;done++;if(done>=need)nextMission();else{toast("좋아요! "+done+"/"+need);ui();}});};};
+    ui();return;}
+}
+
+/* ===== 사진 촬영 ===== */
+function photoCapture(input,cb){
+  const f=input.files&&input.files[0];if(!f)return;
+  const fr=new FileReader();
+  fr.onload=()=>{const img=new Image();img.onload=()=>{
+    const c=document.createElement("canvas");const w=Math.min(480,img.width||480);const s=img.width?w/img.width:1;
+    c.width=w;c.height=(img.height||480)*s;c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+    let url;try{url=c.toDataURL("image/jpeg",0.6);}catch(e){url=fr.result;}
+    document.getElementById("photoPrev").innerHTML=
+      `<img src="${url}" style="width:100%;border-radius:12px;max-height:200px;object-fit:cover;">
+       <button class="btn" style="margin-top:10px;" id="photoOk">✅ 인증</button>`;
+    document.getElementById("photoOk").onclick=()=>cb(url);
+  };img.src=fr.result;};
+  fr.readAsDataURL(f);
+}
+
+/* ===== 기상 기록 ===== */
+/* ===== 스트릭 보호 ===== */
+const MILESTONES=[
+  {d:3,e:"🌱",n:"3일 새싹",bonus:30},
+  {d:7,e:"🔥",n:"일주일 불꽃",bonus:70},
+  {d:14,e:"⭐",n:"2주 스타",bonus:150},
+  {d:30,e:"💎",n:"한 달 다이아",bonus:300},
+  {d:50,e:"👑",n:"50일 킹",bonus:500},
+  {d:100,e:"🏆",n:"100일 레전드",bonus:1000}
+];
+function isoOf(d){return new Date(d).toISOString().slice(0,10);}
+function daysBetween(a,b){return Math.round((new Date(b+"T00:00:00")-new Date(a+"T00:00:00"))/86400000);}
+function mondayOf(d){const x=new Date(d+"T00:00:00");const wd=(x.getDay()+6)%7;x.setDate(x.getDate()-wd);return isoOf(x);}
+
+/* 부팅 시: 어제 빠졌으면 프리즈로 살리거나 스트릭 리셋. 주간 프리즈 지급. */
+function processStreakOnBoot(){
+  const t=todayStr();
+  // 주간 프리즈 지급 (이번 주 월요일 기준 1회)
+  const wk=mondayOf(t);
+  if(S.user.freezeLastGrant!==wk){
+    if(S.user.freezeLastGrant!==null){ // 최초 생성 시엔 이미 1개 있으니 중복지급 방지
+      S.user.freezes=Math.min((S.user.freezes||0)+1,3); // 최대 3개 보유
+    }
+    S.user.freezeLastGrant=wk;
+  }
+  // 스트릭 끊김 판정
+  if(S.user.lastWake && S.user.lastWake!==t){
+    const gap=daysBetween(S.user.lastWake,t); // 마지막 기상~오늘
+    if(gap>=2){
+      // 어제(들) 빠짐. 프리즈로 메울 수 있는 만큼 메움
+      const missed=gap-1; // 빠진 날 수
+      if((S.user.freezes||0)>=missed && S.user.streak>0){
+        S.user.freezes-=missed;
+        S.user.frozenNote={days:missed,at:t}; // 홈에서 안내
+      }else{
+        if(S.user.streak>0)S.user.lostNote={streak:S.user.streak,at:t};
+        S.user.streak=0;
+      }
+    }
+  }
+  save();
+}
+function checkMilestones(streak){
+  const earned=[];
+  MILESTONES.forEach(m=>{
+    if(streak>=m.d && !(S.user.badges||[]).some(b=>b.d===m.d)){
+      S.user.badges=S.user.badges||[];S.user.badges.push({d:m.d,e:m.e,n:m.n,date:todayStr()});
+      S.user.points+=m.bonus;earned.push(m);
+    }
+  });
+  return earned;
+}
+
+function recordWake(){
+  const t=todayStr();
+  if(S.user.lastWake!==t){
+    const y=new Date(Date.now()-86400000).toISOString().slice(0,10);
+    S.user.streak=(S.user.lastWake===y)?S.user.streak+1:1;
+    S.user.lastWake=t;
+    S.user.points+=50;
+    if(S.user.streak>(S.user.bestStreak||0))S.user.bestStreak=S.user.streak;
+    S.user.history.unshift({date:t,time:new Date().toTimeString().slice(0,5)});
+    S.user.history=S.user.history.slice(0,60);
+    S.guilds.forEach(g=>{const me=g.members.find(m=>m.me);if(me&&!me.wokeToday){me.wokeToday=true;me.streak++;me.weekScore=(me.weekScore||0)+10;g.todayCount=(g.todayCount||0)+1;}
+      if(pendingPhoto){g.feed=g.feed||[];g.feed.unshift({by:"나",img:pendingPhoto,time:new Date().toTimeString().slice(0,5),date:t});g.feed=g.feed.slice(0,9);}});
+    pendingPhoto=null;
+    const earned=checkMilestones(S.user.streak);
+    save();renderHome();
+    if(earned.length){
+      const m=earned[earned.length-1];
+      celebrateMilestone(m,S.user.streak);
+    }else{
+      celebrate("굿모닝! 🎉 +50P · 연속 "+S.user.streak+"일");
+    }
+  }else{
+    celebrate("이미 오늘 기상 완료! ☀️");
+  }
+}
+function celebrateMilestone(m,streak){
+  const r=document.getElementById("ring");r.style.background="linear-gradient(160deg,#ffb020,#f05a28)";r.classList.add("show");
+  r.querySelector(".bell").textContent=m.e;document.getElementById("ringTime").textContent="D+"+streak;
+  document.getElementById("ringLabel").textContent="뱃지 획득!";
+  document.getElementById("missionBox").innerHTML=`<h3 style="font-size:20px;">${m.e} ${m.n}</h3>
+    <div class="muted" style="margin:10px 0;color:#fff;opacity:.9;">${streak}일 연속 기상 달성!<br>+${m.bonus}P 보너스 🎁</div>
+    <button class="btn" onclick="shareStreak(${streak},'${m.e}','${m.n}')" style="background:#fff;color:#f05a28;">📤 자랑하기</button>
+    <button class="btn sec" style="margin-top:8px;background:rgba(255,255,255,.2);border:none;color:#fff;" onclick="finishCelebrate()">확인</button>`;
+  document.getElementById("snoozeBtn").style.display="none";
+}
+function shareStreak(streak,e,n){
+  const txt=`웨이크리그에서 ${streak}일 연속 기상 달성! ${e} ${n} 🌅\n나도 같이 일어날래? https://wakeleague.app`;
+  if(navigator.share){navigator.share({title:"웨이크리그",text:txt}).catch(()=>{});}
+  else if(navigator.clipboard){navigator.clipboard.writeText(txt).then(()=>toast("자랑 문구를 복사했어요! 📋"),()=>alert(txt));}
+  else alert(txt);
+}
+
+/* ===== 친구 초대 루프 ===== */
+const INVITE_BADGES=[
+  {n:1,e:"🤝",label:"첫 친구",bonus:50},
+  {n:3,e:"👥",label:"3명 초대",bonus:200},
+  {n:5,e:"🎊",label:"5명 초대",bonus:500}
+];
+function openInvite(gid){
+  inviteCtxGuild=gid||null;
+  const code=S.user.inviteCode;
+  const g=gid?getGuild(gid):null;
+  const next=INVITE_BADGES.find(b=>S.user.invites<b.n);
+  document.getElementById("inviteBody").innerHTML=`
+    <div style="text-align:center;padding:6px 0 4px;">
+      <div style="font-size:46px;">${g?g.emoji+"🤝":"🎁🤝"}</div>
+      <div style="font-size:18px;font-weight:900;margin-top:8px;">친구를 초대하고<br>둘 다 보상 받으세요</div>
+      <div class="muted" style="font-size:13px;margin-top:8px;line-height:1.6;">친구가 가입하면 나는 <b style="color:var(--blue)">❄️ 면제권 +1 · ⭐+100P</b>,<br>친구도 <b style="color:#cdd6ff">⭐+50P</b>를 받아요</div>
+    </div>
+    <div class="card" style="background:var(--card2);margin-top:14px;text-align:center;">
+      <div class="muted" style="font-size:12px;">내 초대 코드</div>
+      <div style="font-size:26px;font-weight:900;letter-spacing:3px;margin-top:4px;">${code}</div>
+    </div>
+    <div class="card" style="margin-top:10px;">
+      <div class="row between"><span class="muted" style="font-size:12px;">지금까지 초대</span><b>${S.user.invites}명</b></div>
+      ${next?`<div class="progress" style="margin-top:10px;"><div style="width:${Math.min(100,S.user.invites/next.n*100)}%"></div></div>
+      <div class="muted" style="font-size:12px;margin-top:8px;">다음 보상 ${next.e} ${next.label}까지 ${next.n-S.user.invites}명 · +${next.bonus}P</div>`:`<div class="muted" style="font-size:12px;margin-top:8px;">모든 초대 보상을 받았어요! 🎊</div>`}
+    </div>
+    <button class="btn" style="margin-top:16px;" onclick="doShareInvite()">📤 카카오·링크로 초대하기</button>
+    <button class="btn sec" style="margin-top:8px;" onclick="simulateInviteJoin()">🧪 (데모) 친구 한 명 합류시키기</button>`;
+  openModal("inviteModal");
+}
+function doShareInvite(){
+  const g=inviteCtxGuild?getGuild(inviteCtxGuild):null;
+  let txt=`나랑 같이 아침에 일어나자! 🌅\n웨이크리그 초대코드: ${S.user.inviteCode}`;
+  if(g)txt+=`\n'${g.emoji} ${g.name}' 길드 (목표 기상 ${g.time})`;
+  txt+=`\nhttps://wakeleague.app/invite/${S.user.inviteCode}`;
+  if(navigator.share){navigator.share({title:"웨이크리그 초대",text:txt}).catch(()=>{});}
+  else if(navigator.clipboard){navigator.clipboard.writeText(txt).then(()=>toast("초대 링크를 복사했어요! 📋"),()=>alert(txt));}
+  else alert(txt);
+}
+function simulateInviteJoin(){
+  // 데모: 가상 친구 합류 → 보상 지급
+  S.user.invites++;
+  S.user.freezes=Math.min((S.user.freezes||0)+1,3);
+  S.user.points+=100;
+  // 초대 마일스톤
+  let badgeMsg="";
+  INVITE_BADGES.forEach(b=>{
+    if(S.user.invites>=b.n && !(S.user.inviteBadges||[]).includes(b.n)){
+      S.user.inviteBadges=S.user.inviteBadges||[];S.user.inviteBadges.push(b.n);
+      S.user.points+=b.bonus;badgeMsg=` · ${b.e} ${b.label} 달성 +${b.bonus}P!`;
+    }
+  });
+  // 합류한 길드에 가상 멤버 추가
+  if(inviteCtxGuild){const g=getGuild(inviteCtxGuild);
+    if(g && g.members.length<10){const pool=BOT_NAMES.filter(n=>!g.members.some(m=>m.name===n));
+      const name=pool.length?pool[Math.floor(Math.random()*pool.length)]:"친구";
+      g.members.push({name,wokeToday:false,streak:0});}}
+  save();closeModal("inviteModal");
+  if(curTab==="guild"&&inviteCtxGuild)renderGuildDetail(inviteCtxGuild);else refresh();
+  toast("🎉 친구가 합류했어요! ❄️+1 ⭐+100P"+badgeMsg);
+}
+let inviteCtxGuild=null;
+
+/* ===== 주간 리그 / 승강제 ===== */
+const LEAGUES=[
+  {t:1,e:"🥉",n:"브론즈",c:"#cd7f32"},
+  {t:2,e:"🥈",n:"실버",c:"#c0c0c0"},
+  {t:3,e:"🥇",n:"골드",c:"#ffd700"},
+  {t:4,e:"💎",n:"다이아",c:"#5b7cff"},
+  {t:5,e:"👑",n:"챔피언",c:"#ff6fae"}
+];
+function leagueInfo(t){return LEAGUES.find(l=>l.t===t)||LEAGUES[0];}
+/* 주중 경과일에 비례해 봇 주간점수를 그럴듯하게 생성 */
+function botWeekScore(){
+  const elapsed=((new Date().getDay()+6)%7)+1; // 월=1..일=7
+  let s=0;for(let i=0;i<elapsed;i++){if(Math.random()<0.7)s+=10+(Math.random()<0.3?Math.floor(Math.random()*8):0);}
+  return s;
+}
+/* 리그 종료까지 남은 일수 (일요일 끝) */
+function leagueDaysLeft(){return 7-(((new Date().getDay()+6)%7)+1)+1;}
+/* 내 주간점수 가산 (모든 가입 길드의 '나'에게) */
+function addWeekScore(pts){S.guilds.forEach(g=>{const me=g.members.find(m=>m.me);if(me)me.weekScore=(me.weekScore||0)+pts;});}
+
+/* 부팅 시 정산: 길드의 weekStart가 지난 주면 순위 정산·승강·리셋 */
+let pendingLeagueResults=[];
+function processLeagueOnBoot(){
+  const curWeek=mondayOf(todayStr());
+  pendingLeagueResults=[];
+  S.guilds.forEach(g=>{
+    if(!g.weekStart)g.weekStart=curWeek;
+    if(g.weekStart===curWeek)return; // 같은 주, 정산 불필요
+    // 지난 주 정산
+    const ranked=g.members.slice().sort((a,b)=>(b.weekScore||0)-(a.weekScore||0));
+    const myRank=ranked.findIndex(m=>m.me)+1;
+    const n=ranked.length;
+    const oldLeague=g.league||1;
+    let change=0;
+    // 상위 30% 승급, 하위 20% 강등
+    if(myRank<=Math.ceil(n*0.3) && oldLeague<5)change=1;
+    else if(myRank>n-Math.floor(n*0.2) && oldLeague>1)change=-1;
+    g.league=Math.max(1,Math.min(5,oldLeague+change));
+    pendingLeagueResults.push({guild:g,rank:myRank,n,change,oldLeague,newLeague:g.league,myScore:ranked[myRank-1]?.weekScore||0});
+    // 리셋
+    g.weekStart=curWeek;
+    g.members.forEach(m=>{m.weekScore=m.me?0:botWeekScore();});
+  });
+  if(pendingLeagueResults.length)save();
+}
+function showLeagueResults(){
+  if(!pendingLeagueResults.length)return false;
+  const r=pendingLeagueResults.shift();
+  const ring=document.getElementById("ring");
+  const nl=leagueInfo(r.newLeague), ol=leagueInfo(r.oldLeague);
+  const up=r.change>0, down=r.change<0;
+  ring.style.background=up?"linear-gradient(160deg,#ffd700,#f05a28)":down?"linear-gradient(160deg,#555c85,#232a52)":"linear-gradient(160deg,#3a5bff,#1a1f55)";
+  ring.classList.add("show");
+  ring.querySelector(".bell").textContent=up?"🎉":down?"😢":"🏁";
+  document.getElementById("ringTime").textContent=nl.e;
+  document.getElementById("ringLabel").textContent=`${g_emoji(r.guild)} ${r.guild.name}`;
+  document.getElementById("snoozeBtn").style.display="none";
+  document.getElementById("missionBox").innerHTML=`
+    <h3 style="font-size:18px;">지난 주 리그 결과</h3>
+    <div style="font-size:15px;margin:10px 0;">${r.n}명 중 <b>${r.rank}위</b> · ${r.myScore}점</div>
+    <div style="font-size:22px;font-weight:900;margin:14px 0;">
+      ${up?`${ol.e} → ${nl.e}<br><span style="color:#fff;">${nl.n} 승급! 🆙</span>`
+        :down?`${ol.e} → ${nl.e}<br><span style="color:#cdd6ff;">${nl.n} 강등...</span>`
+        :`${nl.e} ${nl.n} 유지`}
+    </div>
+    <button class="btn" style="background:#fff;color:#3a5bff;" onclick="nextLeagueResult()">확인</button>`;
+  return true;
+}
+function nextLeagueResult(){
+  if(!showLeagueResults()){document.getElementById("ring").classList.remove("show");
+    document.getElementById("ring").querySelector(".bell").textContent="🔔";renderHome();}
+}
+function g_emoji(g){return g.emoji||"🛡️";}
+function celebrate(msg){
+  const r=document.getElementById("ring");r.style.background="linear-gradient(160deg,#28c98a,#0f5132)";r.classList.add("show");
+  r.querySelector(".bell").textContent="🎉";document.getElementById("ringTime").textContent="GOOD";
+  document.getElementById("ringLabel").textContent="MORNING";
+  document.getElementById("missionBox").innerHTML=`<h3 style="font-size:18px;">${msg}</h3><button class="btn" onclick="finishCelebrate()">확인</button>`;
+  document.getElementById("snoozeBtn").style.display="none";
+}
+function finishCelebrate(){document.getElementById("ring").classList.remove("show");
+  document.getElementById("ring").querySelector(".bell").textContent="🔔";}
+
+/* ============ 길드 ============ */
+function getGuild(id){return S.guilds.find(g=>g.id===id);}
+
+function renderGuild(){
+  document.getElementById("gPoints2").textContent=S.user.points;
+  const v=document.getElementById("guildView");
+  if(!S.guilds.length){
+    v.innerHTML=`<div class="card" style="text-align:center;background:linear-gradient(135deg,#28306a,#1a1f44);">
+      <div style="font-size:40px;">🛡️</div>
+      <h2 style="font-size:18px;margin:8px 0;">아직 가입한 길드가 없어요</h2>
+      <div class="muted" style="margin-bottom:14px;">함께 일어날 길드를 찾거나 직접 만들어보세요</div>
+      <div class="row" style="gap:8px;"><button class="btn" onclick="renderGuildFinder()">길드 찾기</button>
+      <button class="btn sec" onclick="renderGuildCreate()">＋ 만들기</button></div>
+    </div>
+    <div class="sectitle">길드란?</div>
+    <div class="card muted" style="font-size:13px;line-height:1.7;">
+      같은 시간에 일어나는 사람들의 모임이에요. 매일 함께 기상 기록을 쌓고, 콕 찌르기·음성 모닝콜로 서로를 깨워줍니다.
+    </div>`;
+    return;
+  }
+  let html=`<div class="row between" style="margin-bottom:10px;"><b style="font-size:15px;">내 길드 (${S.guilds.length})</b>
+    <button class="btn sm" onclick="renderGuildFinder()">＋ 가입</button></div>`;
+  S.guilds.forEach(g=>{
+    const woke=g.members.filter(m=>m.wokeToday).length;
+    html+=`<div class="card" onclick="renderGuildDetail('${g.id}')" style="cursor:pointer;">
+      <div class="row between"><div class="row" style="gap:11px;"><div class="ava">${g.emoji}</div>
+        <div><div style="font-weight:800;">${g.name}</div>
+        <div class="muted" style="font-size:12px;margin-top:3px;">${leagueInfo(g.league||1).e} ${leagueInfo(g.league||1).n} · 목표 ${g.time} · 🔥${g.streak}</div></div></div>
+        <div style="text-align:right;"><div style="font-weight:800;color:var(--green);">${woke}/${g.members.length}</div>
+        <div class="muted" style="font-size:11px;">오늘 기상</div></div></div>
+      <div class="progress" style="margin-top:11px;"><div style="width:${woke/g.members.length*100}%;background:var(--green);"></div></div>
+    </div>`;
+  });
+  html+=`<button class="btn sec" style="margin-top:2px;" onclick="renderGuildCreate()">＋ 새 길드 만들기</button>`;
+  v.innerHTML=html;
+}
+
+function renderGuildDetail(id){
+  const g=getGuild(id);if(!g){renderGuild();return;}
+  const woke=g.members.filter(m=>m.wokeToday).length;
+  const hasGA=S.alarms.some(a=>a.type==="guild"&&a.guildId===id);
+  const v=document.getElementById("guildView");
+  v.innerHTML=`
+    <div class="row" style="gap:8px;margin-bottom:12px;align-items:center;"><div class="iconbtn" onclick="renderGuild()">←</div><b style="flex:1;font-size:15px;">${g.emoji} ${g.name}</b><div class="iconbtn" onclick="shareGuild('${g.id}')">🔗</div></div>
+    <div class="card" style="background:linear-gradient(135deg,#28306a,#1a1f44);">
+      <div class="row between"><div><div style="font-size:22px;font-weight:900;">${g.emoji} ${g.name}</div>
+      <div class="muted" style="margin-top:4px;">목표 ${g.time} · ${g.members.length}/10 · ${g.type==="cond"?"조건 서버":"자유 서버"}${g.password?" · 🔒":""}</div></div>
+      <div style="text-align:center;"><div style="font-size:26px;font-weight:900;color:var(--amber);">🔥${g.streak}</div><div class="muted">연속</div></div></div>
+      ${g.password?`<div class="muted" style="font-size:12px;margin-top:8px;">🔒 비밀번호: <b style="color:#cdd6ff">${g.password}</b></div>`:""}
+    </div>
+    ${hasGA
+      ? `<button class="btn sec" style="margin-bottom:8px;" onclick="go('home')">⏰ 내 알람으로 이동</button>`
+      : `<button class="btn" style="margin-bottom:8px;" onclick="quickGuildAlarm('${g.id}')">⏰ ${g.time} 알람 추가</button>`}
+    <div class="card">
+      <div class="row between"><b>오늘 우리 길드</b><span class="muted">${woke}/${g.members.length} 기상</span></div>
+      <div class="progress" style="background:rgba(255,255,255,.12);margin-top:12px;"><div style="width:${woke/g.members.length*100}%;background:var(--green);"></div></div>
+      <div class="muted" style="margin-top:10px;font-size:12px;">🎯 주간 목표 <b style="color:#cdd6ff">${g.todayCount||woke}/${g.target}</b> · 달성 시 전원 +100P</div>
+    </div>
+    <div class="sectitle">🏆 이번 주 리그</div>
+    <div class="card" id="leagueCard"></div>
+    <div class="sectitle">📸 오늘의 기상 인증</div>
+    <div class="card" id="guildFeed"></div>
+    <div class="sectitle">길드원</div>
+    <div class="card" id="memList"></div>
+    <button class="btn" style="margin-top:4px;background:linear-gradient(135deg,#28c98a,#3a5bff);" onclick="openInvite('${g.id}')">🤝 친구 초대하고 보상 받기</button>
+    <button class="btn sec" style="margin-top:8px;" onclick="openCallSend('${g.id}')">🎙️ 음성 모닝콜 보내기</button>
+    <button class="btn ghost" style="margin-top:6px;color:var(--red);" onclick="leaveGuild('${g.id}')">길드 나가기</button>`;
+  // 리그 카드
+  const lc=document.getElementById("leagueCard");
+  if(lc){
+    const li=leagueInfo(g.league||1);
+    const ranked=g.members.slice().sort((a,b)=>(b.weekScore||0)-(a.weekScore||0));
+    const n=ranked.length;
+    const promoLine=Math.ceil(n*0.3), demoLine=n-Math.floor(n*0.2);
+    lc.innerHTML=`
+      <div class="row between" style="align-items:center;margin-bottom:4px;">
+        <div class="row" style="gap:9px;"><div style="font-size:30px;">${li.e}</div>
+          <div><b style="color:${li.c};">${li.n} 리그</b><div class="muted" style="font-size:11px;">리그 종료까지 D-${leagueDaysLeft()}</div></div></div>
+        <div class="muted" style="font-size:11px;text-align:right;">상위 30% 승급<br>하위 20% 강등</div>
+      </div>
+      <div style="margin-top:8px;">${ranked.map((m,i)=>{
+        const rank=i+1, promo=rank<=promoLine, demo=rank>demoLine;
+        const zone=promo?"border-left:3px solid var(--green);":demo?"border-left:3px solid var(--red);":"border-left:3px solid transparent;";
+        return `<div class="row" style="gap:10px;padding:8px 0 8px 9px;${zone}${m.me?"background:rgba(91,124,255,.08);border-radius:0 8px 8px 0;":""}border-bottom:1px solid var(--line);">
+          <div style="width:22px;font-weight:900;color:${rank===1?"var(--amber)":"var(--sub)"};">${rank}</div>
+          <div class="ava" style="width:30px;height:30px;font-size:15px;background:${m.me?"linear-gradient(135deg,#3a5bff,#7b4bff)":"#333a63"};">${m.wokeToday?"😆":"😴"}</div>
+          <div style="flex:1;font-weight:${m.me?"800":"600"};font-size:14px;">${m.name}${m.me?" (나)":""}${promo?' <span style="font-size:10px;color:var(--green);">▲승급권</span>':demo?' <span style="font-size:10px;color:var(--red);">▼강등권</span>':""}</div>
+          <b style="font-size:14px;">${m.weekScore||0}점</b></div>`;
+      }).join("")}</div>
+      <div class="muted" style="font-size:11px;margin-top:10px;">기상 +10점 · 매일 기상해 순위를 올리세요!</div>`;
+  }
+  const fd=document.getElementById("guildFeed");
+  const feed=g.feed||[];
+  if(!feed.length){fd.innerHTML='<div class="muted emptybox" style="font-size:13px;">아직 인증이 없어요. 사진 인증·다짐 미션으로 기상하면 올라와요!</div>';}
+  else{fd.style.padding="10px";fd.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">${feed.map(p=>
+    p.img
+      ? `<div style="position:relative;"><img src="${p.img}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:9px;"><div style="position:absolute;bottom:3px;left:4px;font-size:9px;background:rgba(0,0,0,.55);padding:1px 5px;border-radius:5px;">${p.by} ${p.time}</div></div>`
+      : `<div style="aspect-ratio:1;border-radius:9px;background:linear-gradient(135deg,#3a5bff33,#7b4bff33);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:7px;text-align:center;"><div style="font-size:11px;line-height:1.35;">${p.audio?"🎙️":"💬"} ${p.vow||"다짐"}</div><div style="font-size:9px;color:var(--sub);margin-top:5px;">${p.by} ${p.time}</div></div>`
+  ).join("")}</div>`;}
+  const ml=document.getElementById("memList");
+  g.members.forEach((m,i)=>{
+    const el=document.createElement("div");el.className="mem";
+    el.innerHTML=`<div class="ava ${m.wokeToday?"":"gray"}">${m.wokeToday?"😆":"😴"}</div>
+      <div style="flex:1;"><div style="font-weight:700;display:flex;align-items:center;gap:6px;">${m.name}${m.me?" (나)":""}<span class="dot ${m.wokeToday?"up":"no"}"></span></div>
+        <div class="muted" style="font-size:12px;">${m.wokeToday?"오늘 기상 완료":"아직 자는 중"} · 🔥${m.streak}일</div></div>
+      ${(!m.me&&!m.wokeToday)?`<button class="btn sm sec" onclick="poke('${g.id}',${i})">👉 깨우기</button>`:
+        (!m.me?`<button class="btn sm sec" onclick="stamp('${g.id}',${i})">👏</button>`:"")}`;
+    ml.appendChild(el);
+  });
+}
+function poke(gid,i){const g=getGuild(gid);const m=g.members[i];toast("👉 "+m.name+"님을 콕 찔렀어요!");
+  const me=g.members.find(x=>x.me);if(me)me.weekScore=(me.weekScore||0)+5;
+  setTimeout(()=>{m.wokeToday=true;m.streak++;m.weekScore=(m.weekScore||0)+10;g.todayCount=(g.todayCount||0)+1;save();renderGuildDetail(gid);
+    toast("🎉 "+m.name+"님이 일어났어요! (콕 +5점)");},1600);}
+function stamp(gid,i){toast("👏 "+getGuild(gid).members[i].name+"님에게 응원을 보냈어요");}
+function quickGuildAlarm(gid){
+  const g=getGuild(gid);if(!g)return;
+  if(S.alarms.some(a=>a.type==="guild"&&a.guildId===gid)){toast("이미 이 길드 알람이 있어요");go('home');return;}
+  if(S.alarms.length>=FREE_ALARMS && !isPro()){showPro("알람 무제한");return;}
+  S.alarms.push({id:uid(),type:"guild",guildId:gid,time:g.time,label:g.name,days:[1,2,3,4,5],
+    missions:[{type:"photo",count:1,difficulty:"normal"}],sound:"bell",bg:"sunrise",enabled:true});
+  save();toast("🛡️ "+g.name+" 알람 추가! ("+g.time+")");go('home');
+}
+function leaveGuild(gid){if(confirm("이 길드를 나갈까요?")){S.guilds=S.guilds.filter(g=>g.id!==gid);save();renderGuild();}}
+
+let gPage=0;
+function renderGuildFinder(){
+  gPage=0;
+  const v=document.getElementById("guildView");
+  v.innerHTML=`
+    <div class="row" style="gap:8px;margin-bottom:12px;align-items:center;">
+      <div class="iconbtn" onclick="renderGuild()">←</div>
+      <b style="flex:1;font-size:16px;">길드 찾기</b>
+      <button class="btn sm" onclick="renderGuildCreate()">＋ 새 길드</button>
+    </div>
+    <input type="text" id="gSearch" placeholder="검색: 새벽5시, 수능, 자취..." oninput="gPage=0;filterGuilds()">
+    <div class="chiprow" id="gFilters" style="margin-top:12px;"></div>
+    <div id="gResults" style="margin-top:8px;"></div>
+    <div id="gPager" class="row" style="justify-content:center;gap:16px;margin-top:12px;"></div>`;
+  const f=document.getElementById("gFilters");
+  [["전체",""],["🌐 자유","free"],["🎒 중등","중등"],["📗 고등","고등"],["🎓 대학","대학"],["💼 성인","성인"]].forEach((t,i)=>{
+    const c=document.createElement("span");c.className="chip"+(i===0?" on":"");c.textContent=t[0];c.dataset.v=t[1];
+    c.onclick=()=>{f.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));c.classList.add("on");gPage=0;filterGuilds();};f.appendChild(c);});
+  filterGuilds();
+}
+function filterGuilds(){
+  const q=(document.getElementById("gSearch").value||"").toLowerCase();
+  const fil=document.querySelector("#gFilters .chip.on")?.dataset.v||"";
+  const matches=SAMPLE_GUILDS.filter(g=>{
+    const hay=(g.name+g.tags.join()+g.age+g.region+g.time).toLowerCase();
+    const okq=!q||hay.includes(q);
+    let okf=true;
+    if(fil==="free")okf=g.type==="free";
+    else if(fil)okf=(g.age===fil);
+    return okq&&okf;
+  });
+  const per=5,pages=Math.max(1,Math.ceil(matches.length/per));
+  if(gPage>=pages)gPage=pages-1; if(gPage<0)gPage=0;
+  const slice=matches.slice(gPage*per,gPage*per+per);
+  const res=document.getElementById("gResults");res.innerHTML="";
+  if(!slice.length)res.innerHTML='<div class="muted emptybox" style="padding:24px;">검색 결과가 없어요</div>';
+  slice.forEach(g=>{
+    const joined=S.guilds.some(x=>x.id===g.id);
+    const el=document.createElement("div");el.className="gdir";
+    el.innerHTML=`<div class="row" style="gap:11px;flex:1;min-width:0;"><div class="ava">${g.emoji}</div>
+      <div style="min-width:0;"><div style="font-weight:700;">${g.name} ${g.password?"🔒":""}</div>
+      <div style="margin-top:4px;"><span class="tag">⏰${g.time}</span><span class="tag">${g.region}</span><span class="tag">${g.type==="cond"?g.age:"자유"}</span></div>
+      <div class="muted" style="font-size:11px;margin-top:4px;">${g.members}/10 · 🔥${g.streak}</div></div></div>
+      ${joined?`<button class="btn sm sec" style="opacity:.55;" disabled>가입됨</button>`:`<button class="btn sm" onclick="joinGuild('${g.id}')">가입</button>`}`;
+    res.appendChild(el);
+  });
+  const pg=document.getElementById("gPager");
+  pg.innerHTML=pages>1?`<button class="iconbtn" ${gPage===0?'style="opacity:.35"':""} onclick="if(gPage>0){gPage--;filterGuilds();}">◀</button>
+    <span class="muted" style="font-size:13px;font-weight:700;">${gPage+1} / ${pages}</span>
+    <button class="iconbtn" ${gPage>=pages-1?'style="opacity:.35"':""} onclick="if(gPage<${pages-1}){gPage++;filterGuilds();}">▶</button>`:"";
+}
+function joinGuild(id){
+  if(S.guilds.some(x=>x.id===id)){toast("이미 가입한 길드예요");return;}
+  if(S.guilds.length>=FREE_GUILDS && !isPro()){showPro("길드 무제한 가입");return;}
+  const g=SAMPLE_GUILDS.find(x=>x.id===id);
+  if(g.type==="cond"){
+    const c=meetsCondition(g);
+    if(!c.ok){
+      let need=[]; if(!c.ageOK)need.push(g.age+" 인증"); if(!c.regionOK)need.push(g.region+" 인증");
+      toast("조건 서버예요. "+need.join(" + ")+" 필요 (설정>내 정보)");return;
+    }
+  }
+  if(g.password){
+    const pw=prompt("🔒 '"+g.name+"' 비밀번호를 입력하세요");
+    if(pw===null)return;
+    if(pw!==g.password){toast("비밀번호가 틀렸어요");return;}
+  }
+  const members=[{name:"나",me:true,wokeToday:S.user.lastWake===todayStr(),streak:S.user.streak,weekScore:S.user.lastWake===todayStr()?10:0}];
+  const pool=BOT_NAMES.slice().sort(()=>Math.random()-.5);
+  for(let i=0;i<Math.min(g.members-1,9);i++)members.push({name:pool[i],wokeToday:Math.random()<.5,streak:Math.floor(Math.random()*30),weekScore:botWeekScore()});
+  S.guilds.push({id:g.id,name:g.name,emoji:g.emoji,time:g.time,type:g.type,password:g.password||"",region:g.region,age:g.age,streak:g.streak,members,target:7,todayCount:members.filter(m=>m.wokeToday).length,leader:false,league:g.streak>40?3:g.streak>15?2:1,weekStart:mondayOfBoot(todayStrBoot())});
+  save();renderGuild();toast(g.name+" 가입 완료! 🛡️");
+}
+function shareGuild(id){
+  const g=getGuild(id);if(!g)return;
+  const code=(g.id||"").slice(0,6).toUpperCase();
+  let txt="웨이크리그에서 '"+g.emoji+" "+g.name+"' 길드에 함께 일어나요! 🌅\n목표 기상 "+g.time+" · 초대코드 "+code;
+  if(g.password)txt+="\n🔒 비밀번호: "+g.password;
+  txt+="\nhttps://wakeleague.app/invite/"+g.id;
+  if(navigator.share){navigator.share({title:"웨이크리그 길드 초대",text:txt}).catch(()=>{});}
+  else if(navigator.clipboard){navigator.clipboard.writeText(txt).then(()=>toast("초대 링크를 복사했어요! 📋"),()=>alert(txt));}
+  else{alert(txt);}
+}
+
+/* ===== 길드 만들기 ===== */
+const GUILD_EMOJIS=["⭐","🌅","📚","🎓","🏫","☀️","🔥","🌙","💪","🐤","🦉","🍀"];
+function renderGuildCreate(){
+  const v=document.getElementById("guildView");
+  const u=S.user,ver=u.verified||{};
+  const vAge=ver.age&&u.age?u.age:"", vReg=ver.region&&u.region?u.region:"";
+  let condInner;
+  if(!vAge && !vReg){
+    condInner=`<div class="muted" style="font-size:12px;line-height:1.7;">조건 서버는 인증한 정보로만 만들 수 있어요. 먼저 설정에서 나이대·지역을 인증하세요.</div>
+      <button class="btn sec sm" style="margin-top:10px;" onclick="go('set');renderProfile();">내 정보 인증하러 가기</button>`;
+  }else{
+    const regOpts=`<option value="전국">지역 무관</option>`+(vReg?`<option value="${vReg}" selected>${vReg} (내 인증)</option>`:"");
+    const ageOpts=`<option value="전체">나이 무관</option>`+(vAge?`<option value="${vAge}" selected>${vAge} (내 인증)</option>`:"");
+    condInner=`<label class="fl">가입 조건</label>
+      <div class="row" style="gap:8px;"><select id="gcRegion">${regOpts}</select><select id="gcAge">${ageOpts}</select></div>
+      <div class="muted" style="font-size:11px;margin-top:8px;">🔒 이 조건을 인증한 사람만 가입할 수 있어요</div>`;
+  }
+  v.innerHTML=`
+    <div class="row" style="gap:8px;margin-bottom:14px;"><div class="iconbtn" onclick="renderGuild()">←</div><b style="font-size:16px;">새 길드 만들기</b></div>
+    <label class="fl">길드 아이콘</label>
+    <div class="opts" id="gcEmoji"></div>
+    <label class="fl">길드 이름</label>
+    <input type="text" id="gcName" placeholder="예: 새벽 5시 미라클" maxlength="16">
+    <label class="fl">목표 기상 시간</label>
+    <input type="time" id="gcTime" value="06:00">
+    <label class="fl">길드 비밀번호 (선택)</label>
+    <input type="text" id="gcPw" placeholder="비워두면 누구나 가입" maxlength="20">
+    <label class="fl">서버 유형</label>
+    <div class="opts" id="gcType">
+      <div class="opt on" data-k="free"><span class="e">🌐</span>자유 서버</div>
+      <div class="opt" data-k="cond"><span class="e">🔒</span>조건 서버</div>
+    </div>
+    <div id="gcCondWrap" class="hide">${condInner}</div>
+    <label class="fl">주간 공동 목표 (기상 횟수)</label>
+    <input type="number" id="gcTarget" inputmode="numeric" value="7" min="1" max="99">
+    <button class="btn" style="margin-top:20px;" onclick="submitGuild()">길드 만들기 🎉</button>`;
+  const ge=document.getElementById("gcEmoji");
+  GUILD_EMOJIS.forEach((e,i)=>{const o=document.createElement("div");o.className="opt"+(i===0?" on":"");o.dataset.k=e;
+    o.innerHTML=`<span class="e">${e}</span>`;o.style.flex="1 1 18%";o.style.minWidth="0";
+    o.onclick=()=>{ge.querySelectorAll(".opt").forEach(x=>x.classList.remove("on"));o.classList.add("on");};ge.appendChild(o);});
+  const gt=document.getElementById("gcType");
+  gt.querySelectorAll(".opt").forEach(o=>o.onclick=()=>{gt.querySelectorAll(".opt").forEach(x=>x.classList.remove("on"));o.classList.add("on");
+    document.getElementById("gcCondWrap").classList.toggle("hide",o.dataset.k!=="cond");});
+}
+function submitGuild(){
+  if(S.guilds.length>=FREE_GUILDS && !isPro()){showPro("길드 무제한");return;}
+  const name=document.getElementById("gcName").value.trim();
+  if(!name){toast("길드 이름을 입력해주세요");return;}
+  const emoji=document.querySelector("#gcEmoji .opt.on")?.dataset.k||"⭐";
+  const type=document.querySelector("#gcType .opt.on")?.dataset.k||"free";
+  if(type==="cond" && !document.getElementById("gcRegion")){toast("조건 서버는 내 정보 인증 후 만들 수 있어요");return;}
+  const target=parseInt(document.getElementById("gcTarget").value,10)||7;
+  const password=val("gcPw").trim();
+  const region=type==="cond"?val("gcRegion"):"전국";
+  const age=type==="cond"?val("gcAge"):"전체";
+  S.guilds.push({id:uid(),name,emoji,time:document.getElementById("gcTime").value,type,password,region,age,streak:0,target,todayCount:0,leader:true,league:1,weekStart:mondayOfBoot(todayStrBoot()),
+    members:[{name:"나",me:true,wokeToday:S.user.lastWake===todayStr(),streak:S.user.streak,weekScore:S.user.lastWake===todayStr()?10:0}]});
+  save();renderGuild();toast("'"+name+"' 길드를 만들었어요! 🎉");
+}
+
+function meetsCondition(g){
+  const u=S.user,ver=u.verified||{};
+  const regionOK = !g.region || g.region==="전국" || (ver.region && u.region===g.region);
+  const ageOK = !g.age || g.age==="전체" || (ver.age && u.age===g.age);
+  return {ok:regionOK&&ageOK,regionOK,ageOK};
+}
+
+/* ===== 음성 / AI 모닝콜 ===== */
+function recordVoice(){
+  openModal("voiceModal");
+  const vfx=document.getElementById("vfx");
+  vfx.querySelectorAll(".opt").forEach(o=>o.onclick=()=>{vfx.querySelectorAll(".opt").forEach(x=>x.classList.remove("on"));o.classList.add("on");});
+  document.getElementById("ttsText").value="";
+}
+async function doRecord(){
+  if(S.customSounds.length>=10){toast("모닝콜은 최대 10개까지예요");return;}
+  if(!navigator.mediaDevices||!window.MediaRecorder){toast("녹음 미지원 브라우저예요. AI 텍스트를 써보세요");return;}
+  const effect=document.querySelector("#vfx .opt.on")?.dataset.k||"none";
+  if(effect!=="none" && !isPro()){showPro("음성 변조 저장");return;}
+  const btn=document.getElementById("recBtn");
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    const mr=new MediaRecorder(stream);const cks=[];
+    mr.ondataavailable=e=>cks.push(e.data);
+    mr.onstop=()=>{const blob=new Blob(cks,{type:mr.mimeType||"audio/webm"});const fr=new FileReader();
+      fr.onload=()=>{const id="voice_"+uid();const fxName=effect==="cat"?"🐱 고양이":effect==="dog"?"🐶 강아지":"🎙️";
+        S.customSounds.push({id,name:fxName+" 모닝콜 "+(S.customSounds.length+1),type:"voice",data:fr.result,effect});
+        save();toast("저장 완료!");closeModal("voiceModal");renderSet();};
+      fr.readAsDataURL(blob);stream.getTracks().forEach(t=>t.stop());};
+    let n=3;btn.disabled=true;btn.textContent="🔴 녹음 중... "+n;
+    const iv=setInterval(()=>{n--;btn.textContent=n>0?"🔴 녹음 중... "+n:"처리 중...";if(n<=0)clearInterval(iv);},1000);
+    mr.start();
+    setTimeout(()=>{if(mr.state!=="inactive")mr.stop();btn.textContent="🔴 3초 녹음 시작";btn.disabled=false;},3000);
+  }catch(e){toast("마이크 권한이 필요해요. AI 텍스트를 써보세요");btn.textContent="🔴 3초 녹음 시작";btn.disabled=false;}
+}
+function previewTts(){const t=val("ttsText").trim();if(!t){toast("텍스트를 입력하세요");return;}
+  stopSound();if(!speakLoop(t))toast("이 브라우저는 음성 합성을 지원하지 않아요");setTimeout(stopSpeak,3500);}
+function makeTtsSound(){const t=val("ttsText").trim();if(!t){toast("텍스트를 입력하세요");return;}
+  if(S.customSounds.length>=10){toast("모닝콜은 최대 10개까지예요");return;}
+  if(!isPro() && S.customSounds.filter(s=>s.type==="tts").length>=1){showPro("AI 모닝콜 무제한");return;}
+  const id="tts_"+uid();S.customSounds.push({id,name:"✨ AI: "+(t.length>12?t.slice(0,12)+"…":t),type:"tts",text:t});
+  save();toast("AI 모닝콜을 만들었어요!");closeModal("voiceModal");renderSet();}
+
+/* ============ 기록 ============ */
+function milestoneHtml(){
+  const s=S.user.streak, earned=new Set((S.user.badges||[]).map(b=>b.d));
+  const next=MILESTONES.find(m=>s<m.d);
+  let html="";
+  if(next){
+    const prev=MILESTONES.filter(m=>m.d<next.d).pop();
+    const base=prev?prev.d:0;
+    const pct=Math.min(100,Math.max(0,(s-base)/(next.d-base)*100));
+    html+=`<div class="row between"><b>다음 뱃지: ${next.e} ${next.n}</b><span class="muted">${s}/${next.d}일</span></div>
+      <div class="progress" style="margin-top:10px;"><div style="width:${pct}%"></div></div>
+      <div class="muted" style="margin-top:8px;font-size:12px;">${next.d-s}일 더! 달성 시 +${next.bonus}P 🎁</div>
+      <div style="height:14px;border-bottom:1px solid var(--line);margin-bottom:14px;"></div>`;
+  }else{
+    html+=`<div class="muted" style="text-align:center;margin-bottom:12px;">모든 뱃지를 모았어요! 🏆 레전드!</div>`;
+  }
+  html+=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">${MILESTONES.map(m=>{
+    const got=earned.has(m.d)||s>=m.d;
+    return `<div style="text-align:center;padding:12px 6px;border-radius:13px;background:${got?"rgba(255,176,32,.14)":"var(--card2)"};border:1px solid ${got?"var(--amber)":"var(--line)"};${got?"":"opacity:.5;"}">
+      <div style="font-size:28px;filter:${got?"none":"grayscale(1)"};">${m.e}</div>
+      <div style="font-size:11px;font-weight:700;margin-top:4px;${got?"color:var(--amber);":"color:var(--sub);"}">${m.d}일</div></div>`;
+  }).join("")}</div>`;
+  return html;
+}
+function renderRec(){
+  const v=document.getElementById("recView");
+  const hist=S.user.history;
+  const days=[];for(let i=6;i>=0;i--){const d=new Date(Date.now()-i*86400000).toISOString().slice(0,10);days.push(d);}
+  const bars=days.map(d=>{const h=hist.find(x=>x.date===d);return{d,ok:!!h};});
+  v.innerHTML=`
+    <div class="statgrid">
+      <div class="stat"><div class="v" style="color:var(--amber);">${S.user.streak}</div><div class="k">🔥 연속 기상</div></div>
+      <div class="stat"><div class="v" style="color:var(--blue);">❄️${S.user.freezes||0}</div><div class="k">면제권</div></div>
+      <div class="stat"><div class="v" style="color:var(--green);">${S.user.bestStreak||S.user.streak}</div><div class="k">최고 기록</div></div>
+    </div>
+    <div class="sectitle">최근 7일</div>
+    <div class="card"><div class="barwrap">${bars.map(b=>`<div class="b ${b.ok?"":"miss"}" style="height:${b.ok?100:14}%"><span>${DAYS[new Date(b.d).getDay()]}</span></div>`).join("")}</div>
+    <div style="height:18px;"></div></div>
+    ${S.guilds.length?`<div class="sectitle">길드 랭킹</div>
+      <div class="chiprow" id="recGuildChips" style="margin-bottom:8px;"></div>
+      <div class="card" id="recGuildRank"></div>`:""}
+    <div class="sectitle">🏅 뱃지 컬렉션</div>
+    <div class="card">${milestoneHtml()}</div>
+    <div class="sectitle">기상 히스토리</div>
+    <div class="card">${hist.length?hist.slice(0,12).map(h=>`<div class="mem"><div class="ava" style="background:linear-gradient(135deg,#28c98a,#0f5132);">☀️</div><div style="flex:1;"><b>${h.date}</b></div><span class="muted">${h.time} 기상</span></div>`).join(""):'<div class="muted emptybox" style="padding:18px;">아직 기록이 없어요. 알람을 테스트해보세요!</div>'}</div>`;
+  renderRecGuildRank();
+}
+let recGuildSel=0;
+function renderRecGuildRank(){
+  const chips=document.getElementById("recGuildChips");if(!chips)return;
+  if(recGuildSel>=S.guilds.length)recGuildSel=0;
+  chips.innerHTML="";
+  S.guilds.forEach((g,i)=>{const c=document.createElement("span");c.className="chip"+(i===recGuildSel?" on":"");
+    c.textContent=g.emoji+" "+g.name;c.onclick=()=>{recGuildSel=i;renderRecGuildRank();};chips.appendChild(c);});
+  const g=S.guilds[recGuildSel];const box=document.getElementById("recGuildRank");if(!box)return;
+  if(!g){box.innerHTML="";return;}
+  const ms=g.members.slice().sort((a,b)=>b.streak-a.streak);
+  box.innerHTML=ms.map((m,i)=>`<div class="mem"><div style="width:24px;font-weight:900;color:${i===0?"var(--amber)":"var(--sub)"};">${i+1}</div>
+    <div class="ava" style="background:${m.me?"linear-gradient(135deg,#3a5bff,#7b4bff)":"#333a63"};">${m.wokeToday?"😆":"😴"}</div>
+    <div style="flex:1;font-weight:${m.me?"800":"600"};">${m.name}${m.me?" (나)":""}</div><span class="muted">🔥${m.streak}일</span></div>`).join("");
+}
+
+/* ============ 설정 ============ */
+function renderSet(){
+  const v=document.getElementById("setView");
+  v.innerHTML=`
+    <div class="card" style="background:linear-gradient(135deg,#4a2f7a,#241a44);border-color:#6b4bb0;cursor:pointer;" onclick="${isPro()?'':'showPro()'}">
+      <div class="row between"><div><b>${isPro()?"✨ Pro 사용 중":"✨ 웨이크리그 Pro"}</b>
+        <div class="muted" style="font-size:12px;margin-top:3px;">${isPro()?"모든 기능 잠금 해제됨":"무제한·꾸미기·음성변조 잠금 해제"}</div></div>
+        <div class="sw ${isPro()?"on":""}" onclick="event.stopPropagation();togglePro()"></div></div>
+    </div>
+    <div class="card" style="background:linear-gradient(135deg,#28c98a,#1a4a3a);border-color:#28c98a;cursor:pointer;" onclick="openInvite()">
+      <div class="row between"><div><b>🤝 친구 초대</b>
+        <div class="muted" style="font-size:12px;margin-top:3px;">초대할 때마다 ❄️ 면제권 + 포인트 · 지금까지 ${S.user.invites}명</div></div>
+        <div style="font-size:24px;">🎁</div></div>
+    </div>
+    <div class="sectitle">🎙️ 나만의 모닝콜</div>
+    <div class="card" style="background:linear-gradient(135deg,#28306a,#1a1f44);text-align:center;">
+      <div style="font-size:34px;">🎙️✨</div>
+      <h2 style="font-size:18px;margin:8px 0 6px;">모닝콜 만들기</h2>
+      <div class="muted" style="font-size:13px;line-height:1.7;margin-bottom:16px;">직접 녹음하거나(🐱🐶 변조) 텍스트를 입력하면 AI가 읽어줘요</div>
+      <button class="btn" onclick="recordVoice()">＋ 모닝콜 만들기</button>
+    </div>
+    <div class="sectitle">내가 만든 모닝콜</div>
+    <div class="card" id="myCalls"></div>
+    <div class="sectitle">계정</div>
+    <div class="card">
+      <div class="mem"><div class="ava">🙂</div><div style="flex:1;"><b>${S.user.name}</b><div class="muted" style="font-size:12px;">⭐ ${S.user.points}P · 🔥${S.user.streak}일</div></div></div>
+    </div>
+    <div class="sectitle">내 정보 · 인증</div>
+    <div class="card">
+      ${profileRow("나이대","age",S.user.age)}
+      ${profileRow("학교","school",S.user.school)}
+      ${profileRow("직장","work",S.user.work)}
+      ${profileRow("지역","region",S.user.region)}
+      <button class="btn sec" style="margin-top:12px;" onclick="renderProfile()">정보 설정 / 인증</button>
+    </div>
+    <div class="sectitle">데이터</div>
+    <button class="btn sec" style="margin-bottom:8px;" onclick="restartOnboarding()">🔄 맞춤 설정 다시 하기</button>
+    <button class="btn ghost" style="color:var(--red);" onclick="resetAll()">모든 데이터 초기화</button>
+    <div class="muted" style="text-align:center;font-size:11px;margin-top:18px;line-height:1.6;">
+      WAKE LEAGUE · 프로토타입 v0.1<br>
+      홈 화면에 추가하면 앱처럼 쓸 수 있어요.
+    </div>`;
+  const mc=document.getElementById("myCalls");const cs=S.customSounds;
+  if(!cs.length){mc.innerHTML='<div class="muted emptybox" style="font-size:13px;">아직 만든 모닝콜이 없어요</div>';}
+  else cs.forEach(s=>{const ic=s.type==="tts"?"✨":"🎙️";const el=document.createElement("div");el.className="mem";
+    el.innerHTML=`<div class="ava" style="background:${s.type==="tts"?"linear-gradient(135deg,#28c98a,#3a5bff)":"linear-gradient(135deg,#ff6fae,#7b4bff)"};">${ic}</div>
+      <div style="flex:1;font-weight:600;">${s.name}</div>
+      <button class="btn sm sec" onclick="startSound('${s.id}');setTimeout(stopSound,3000);">▶</button>
+      <button class="iconbtn" style="margin-left:6px;width:36px;height:36px;font-size:15px;" onclick="delCall('${s.id}')">🗑️</button>`;
+    mc.appendChild(el);});
+}
+function delCall(id){S.customSounds=S.customSounds.filter(s=>s.id!==id);S.alarms.forEach(a=>{if(a.sound===id)a.sound="bell";});save();renderSet();toast("삭제했어요");}
+function resetAll(){if(confirm("모든 알람·기록·길드를 초기화할까요?")){localStorage.removeItem("wakeleague");S=load();renderHome();go("home");toast("초기화 완료");}}
+
+/* ===== 내 정보 · 인증 ===== */
+function profileRow(label,key,value){
+  const ver=(S.user.verified||{})[key];
+  const badge=value?(ver?`<span class="chip on">✅ 인증</span>`:`<span class="chip" style="border-color:var(--amber);color:var(--amber);">미인증</span>`):`<span class="chip">미설정</span>`;
+  return `<div class="mem"><div style="flex:1;"><b>${label}</b> <span class="muted" style="font-size:12px;">${value||"-"}</span></div>${badge}</div>`;
+}
+function renderProfile(){
+  const v=document.getElementById("setView");const u=S.user,ver=u.verified||{};
+  const b=k=>ver[k]?`<span class="chip on">✅ 인증됨</span>`:`<span class="chip" style="border-color:var(--amber);color:var(--amber);">미인증</span>`;
+  const sel=(id,opts,cur)=>`<select id="${id}">${opts.map(o=>`<option value="${o}" ${cur===o?"selected":""}>${o||"선택"}</option>`).join("")}</select>`;
+  v.innerHTML=`
+    <div class="row" style="gap:8px;margin-bottom:14px;"><div class="iconbtn" onclick="renderSet()">←</div><b style="font-size:16px;">내 정보 · 인증</b></div>
+    <div class="card muted" style="font-size:12px;line-height:1.6;">인증한 정보는 조건 서버 가입 자격으로 쓰여요. 프로토타입에서는 인증을 시뮬레이션합니다.</div>
+    <label class="fl">나이대 ${b('age')}</label>
+    <div class="row" style="gap:8px;">${sel("pfAge",["","중등","고등","대학","성인"],u.age)}<button class="btn sm sec" onclick="verifyField('age','pfAge')">인증</button></div>
+    <label class="fl">학교 ${b('school')}</label>
+    <div class="row" style="gap:8px;"><input type="text" id="pfSchool" value="${(u.school||"").replace(/"/g,'&quot;')}" placeholder="예: ○○고등학교"><button class="btn sm sec" onclick="verifyField('school','pfSchool')">인증</button></div>
+    <label class="fl">직장 ${b('work')}</label>
+    <div class="row" style="gap:8px;"><input type="text" id="pfWork" value="${(u.work||"").replace(/"/g,'&quot;')}" placeholder="예: ○○회사"><button class="btn sm sec" onclick="verifyField('work','pfWork')">인증</button></div>
+    <label class="fl">지역 ${b('region')}</label>
+    <div class="row" style="gap:8px;">${sel("pfRegion",["","서울","경기","부산","대구","전국"],u.region)}<button class="btn sm sec" onclick="verifyField('region','pfRegion')">인증</button></div>
+    <button class="btn" style="margin-top:20px;" onclick="saveProfile()">저장</button>`;
+}
+function saveProfile(){
+  S.user.age=val("pfAge");S.user.school=val("pfSchool").trim();S.user.work=val("pfWork").trim();S.user.region=val("pfRegion");
+  save();toast("프로필을 저장했어요");renderSet();
+}
+function verifyField(key,inputId){
+  const v=val(inputId).trim();
+  if(!v){toast("먼저 값을 입력/선택하세요");return;}
+  S.user[key]=v;S.user.verified=S.user.verified||{};S.user.verified[key]=true;save();
+  toast("✅ 인증 완료! ("+v+")");renderProfile();
+}
+
+/* ============ Pro 구독 (데모) ============ */
+function showPro(feat){
+  document.getElementById("proReason").textContent = feat?("'"+feat+"'은(는) Pro 전용이에요"):"잠긴 기능을 모두 풀어보세요";
+  openModal("proModal");
+}
+function buyPro(){S.user.pro=true;save();closeModal("proModal");toast("✨ Pro 활성화!");refresh();}
+function togglePro(){S.user.pro=!S.user.pro;save();toast(S.user.pro?"✨ Pro ON (데모)":"Pro OFF");refresh();}
+function refresh(){renderHome();if(curTab==="guild")renderGuild();if(curTab==="rec")renderRec();if(curTab==="set")renderSet();}
+
+/* ============ 공통 ============ */
+function openModal(id){document.getElementById(id).classList.add("show");}
+function closeModal(id){document.getElementById(id).classList.remove("show");}
+let toastT;
+function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),2200);}
+
+document.addEventListener("focusin",(e)=>{const t=e.target;if(!t||!/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))return;
+  const ring=document.getElementById("ring");if(ring.classList.contains("show"))ring.classList.add("kbd");
+  setTimeout(()=>{try{t.scrollIntoView({block:"center",behavior:"smooth"});}catch(_){}},280);});
+document.addEventListener("focusout",()=>{setTimeout(()=>{const a=document.activeElement;
+  if(!a||!/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)){const ring=document.getElementById("ring");if(ring)ring.classList.remove("kbd");}},120);});
+
+/* ============ 온보딩 ============ */
+/* 공통: 아침의 적 진단 → 미션·사운드 추천 */
+const WAKE_TYPES={
+  relapse:{name:"의지박약형",emoji:"💤",desc:"끄고 다시 잠드는 타입",
+    missions:[{type:"shake",count:20,difficulty:"normal"},{type:"math",count:3,difficulty:"normal"}],sound:"digital",
+    line:"몸과 뇌를 동시에 깨우는 미션으로 다시 잠들 틈을 없앴어요"},
+  deepsleep:{name:"숙면형",emoji:"🔕",desc:"알람을 못 듣는 타입",
+    missions:[{type:"photo",count:1,difficulty:"normal"}],sound:"rise",
+    line:"점점 커지는 알람과 사진 인증으로 확실히 깨워드려요"},
+  nomotiv:{name:"동기결핍형",emoji:"🥱",desc:"일어날 이유가 없는 타입",
+    missions:[{type:"groupwait",count:5,difficulty:"normal"},{type:"vow",count:1,difficulty:"normal"}],sound:"birds",
+    line:"길드원과 함께 출석하고 다짐을 남기며 동기를 만들어요"}
+};
+const ENEMY_Q={kicker:"마지막 진단",title:"새벽 기상,\n뭐가 제일 문제예요?",key:"wakeType",
+  choices:[
+    {v:"relapse",e:"💤",t:"알람 끄고 다시 잠들어요",d:"의지로는 도저히 안 돼요"},
+    {v:"deepsleep",e:"🔕",t:"알람을 아예 못 들어요",d:"한번 자면 업혀가도 몰라요"},
+    {v:"nomotiv",e:"🥱",t:"일어날 의지가 안 생겨요",d:"눈은 떴는데 못 일어나요"}
+  ]};
+
+/* 트랙별 문항 정의. type=choice|dday|time|result */
+const TRACKS={
+  수험생:[
+    {kicker:"수험생 트랙",title:"몇 학년이에요?",key:"grade",
+      choices:[{v:"고1",e:"📗",t:"고1"},{v:"고2",e:"📙",t:"고2"},{v:"고3/N수",e:"🔥",t:"고3 · N수",d:"가장 절박한 시기"}]},
+    {type:"dday",kicker:"D-day 설정",title:"가장 중요한 시험이\n언제예요?",
+      presets:[{v:"수능",t:"🎓 수능",auto:"next-csat"},{v:"내신/모의",t:"📑 내신·모의고사",auto:"+30"},{v:"직접",t:"📅 직접 입력",auto:"pick"}]},
+    ENEMY_Q,
+    {type:"time",kicker:"목표 기상",title:"몇 시에\n일어날 거예요?",
+      choices:[{v:"05:00",e:"🌑",t:"새벽 5시",d:"독한 새벽반"},{v:"05:30",e:"🌘",t:"5시 30분"},{v:"06:00",e:"🌅",t:"6시",d:"등교 준비"}]}
+  ],
+  직장인:[
+    {kicker:"직장인 트랙",title:"왜 일찍\n일어나려 해요?",key:"purpose",
+      choices:[{v:"운동",e:"🏃",t:"아침 운동",d:"갓생의 시작"},{v:"자기계발",e:"📚",t:"공부·자기계발"},{v:"여유",e:"☕",t:"출근 전 여유"}]},
+    ENEMY_Q,
+    {type:"time",kicker:"목표 기상",title:"몇 시에\n일어날 거예요?",
+      choices:[{v:"05:00",e:"🌑",t:"새벽 5시",d:"미라클모닝"},{v:"06:00",e:"🌅",t:"6시"},{v:"07:00",e:"🌤️",t:"7시"}]}
+  ],
+  대학생:[
+    {kicker:"대학생 트랙",title:"어느 교시가\n제일 위험해요?",key:"grade",
+      choices:[{v:"1교시",e:"😵",t:"1교시",d:"출석의 무덤"},{v:"2교시",e:"😮‍💨",t:"2교시"},{v:"공강관리",e:"📖",t:"공강 자기관리"}]},
+    ENEMY_Q,
+    {type:"time",kicker:"목표 기상",title:"몇 시에\n일어날 거예요?",
+      choices:[{v:"07:00",e:"🌅",t:"7시",d:"1교시 사수"},{v:"07:30",e:"🌤️",t:"7시 30분"},{v:"08:00",e:"☀️",t:"8시"}]}
+  ]
+};
+/* 타입별 추천 길드 필터 */
+const TYPE_GUILD_FILTER={수험생:g=>g.age==="고등",직장인:g=>g.age==="성인",대학생:g=>g.age==="대학"};
+
+let obType=null, obAnswers={}, obSeq=[], obIdx=0, obPickedGuild=null;
+
+function startOnboarding(){
+  obType=null;obAnswers={};obSeq=[];obIdx=0;obPickedGuild=null;
+  document.getElementById("onboard").classList.add("show");
+  obRenderWelcome();
+}
+function obSkip(){
+  if(!S.alarms.length){
+    S.alarms.push({id:uid(),type:"normal",time:"07:00",label:"기상",days:[1,2,3,4,5],
+      missions:[{type:"math",count:3,difficulty:"normal"}],sound:"bell",bg:"indigo",enabled:true});
+  }
+  S.user.onboarded=true;save();
+  document.getElementById("onboard").classList.remove("show");
+  renderHome();go("home");
+}
+function obProg(total,cur){
+  const p=document.getElementById("obProg");p.innerHTML="";
+  for(let i=0;i<total;i++){const s=document.createElement("div");s.className="seg";
+    s.innerHTML=`<i style="width:${i<cur?100:i===cur?55:0}%"></i>`;p.appendChild(s);}
+}
+function obSkipBtn(show){document.querySelector(".ob-skip").style.display=show?"block":"none";}
+
+function obRenderWelcome(){
+  obSkipBtn(true);obProg(1,0);
+  document.getElementById("obStep").innerHTML=`
+    <div class="ob-spacer"></div>
+    <div class="ob-hero">🛡️⏰</div>
+    <div class="ob-title" style="text-align:center;">혼자 못 일어나는 당신을,<br>같은 길드가 깨웁니다</div>
+    <div class="ob-sub" style="text-align:center;">매일 같은 시간, 같은 목표를 가진 사람들과<br>함께 일어나는 소셜 기상 챌린지</div>
+    <div class="ob-spacer"></div>
+    <button class="btn" onclick="obRenderTypeSelect()">시작하기</button>
+    <div class="muted" style="text-align:center;font-size:11px;margin-top:12px;">30초면 끝나요</div>`;
+}
+
+function obRenderTypeSelect(){
+  obSkipBtn(true);obProg(5,0);
+  document.getElementById("obStep").innerHTML=`
+    <div class="ob-kicker">START</div>
+    <div class="ob-title">어떤 아침을<br>보내고 있나요?</div>
+    <div class="ob-sub">유형에 맞춰 알람과 길드를 추천해드려요</div>
+    <div class="ob-choices">
+      ${[["수험생","🎓","수험생","수능·내신이 코앞"],["직장인","💼","직장인","미라클모닝·갓생"],["대학생","📚","대학생","1교시 출석 사수"]]
+        .map(([v,e,t,d])=>`<button class="ob-choice" onclick="obPickType('${v}')"><span class="ce">${e}</span><span><span class="ct">${t}</span><span class="cd">${d}</span></span></button>`).join("")}
+    </div>
+    <div class="ob-spacer"></div>
+    <button class="ob-back" onclick="obRenderWelcome()">← 뒤로</button>`;
+}
+function obPickType(t){
+  obType=t;obAnswers={};obSeq=TRACKS[t];obIdx=0;obPickedGuild=null;
+  S.user.userType=t;
+  obRenderQuestion();
+}
+
+function obRenderQuestion(){
+  obSkipBtn(true);
+  const q=obSeq[obIdx];
+  obProg(obSeq.length+2, obIdx+1);
+  const step=document.getElementById("obStep");
+  const backFn = obIdx===0 ? "obRenderTypeSelect()" : "obBack()";
+  if(q.type==="dday"){
+    step.innerHTML=`
+      <div class="ob-kicker">${q.kicker}</div>
+      <div class="ob-title">${q.title.replace(/\n/g,"<br>")}</div>
+      <div class="ob-choices">
+        ${q.presets.map(p=>`<button class="ob-choice" onclick="obPickDday('${p.v}','${p.auto}')"><span class="ce">${p.t.split(" ")[0]}</span><span class="ct">${p.t.split(" ").slice(1).join(" ")||p.t}</span></button>`).join("")}
+      </div>
+      <input type="date" id="obDateInput" class="ob-date hide" onchange="obPickDday('직접','manual')">
+      <div class="ob-spacer"></div>
+      <button class="ob-back" onclick="${backFn}">← 뒤로</button>`;
+    return;
+  }
+  step.innerHTML=`
+    <div class="ob-kicker">${q.kicker}</div>
+    <div class="ob-title">${q.title.replace(/\n/g,"<br>")}</div>
+    ${q.sub?`<div class="ob-sub">${q.sub}</div>`:""}
+    <div class="ob-choices">
+      ${q.choices.map(c=>`<button class="ob-choice" onclick="obPickChoice('${c.v}')"><span class="ce">${c.e}</span><span><span class="ct">${c.t}</span>${c.d?`<span class="cd">${c.d}</span>`:""}</span></button>`).join("")}
+    </div>
+    <div class="ob-spacer"></div>
+    <button class="ob-back" onclick="${backFn}">← 뒤로</button>`;
+}
+function obPickChoice(v){
+  const q=obSeq[obIdx];
+  if(q.type==="time"){obAnswers.wakeTime=v;}
+  else{obAnswers[q.key]=v; if(q.key==="wakeType")S.user.wakeType=v; if(q.key==="grade")S.user.grade=v; if(q.key==="purpose")S.user.purpose=v;}
+  obAdvance();
+}
+function obPickDday(label,auto){
+  let target;
+  const today=new Date();today.setHours(0,0,0,0);
+  if(auto==="next-csat"){
+    let y=today.getFullYear();let d=new Date(y,10,13);
+    if(d<today)d=new Date(y+1,10,13);
+    target=d;
+  }else if(auto==="+30"){target=new Date(today.getTime()+30*86400000);}
+  else if(auto==="pick"){const el=document.getElementById("obDateInput");el.classList.remove("hide");el.focus();
+    try{el.showPicker&&el.showPicker();}catch(e){}return;}
+  else if(auto==="manual"){const v=document.getElementById("obDateInput").value;if(!v)return;target=new Date(v+"T00:00:00");}
+  S.user.dday=target.toISOString().slice(0,10);
+  S.user.ddayLabel=label;
+  obAnswers.dday=S.user.dday;
+  obAdvance();
+}
+function obAdvance(){
+  obIdx++;
+  if(obIdx>=obSeq.length)obRenderResult();
+  else obRenderQuestion();
+}
+function obBack(){if(obIdx>0){obIdx--;obRenderQuestion();}else obRenderTypeSelect();}
+
+function obRenderResult(){
+  obSkipBtn(false);
+  obProg(obSeq.length+2, obSeq.length+1);
+  const wt=WAKE_TYPES[S.user.wakeType]||WAKE_TYPES.relapse;
+  const wakeTime=obAnswers.wakeTime||"06:00";
+  const missionNames=wt.missions.map(m=>MISSIONS[m.type].e+" "+MISSIONS[m.type].n).join(" + ");
+  const snd=BUILTIN_SOUNDS.find(s=>s.id===wt.sound)||BUILTIN_SOUNDS[0];
+  const filt=TYPE_GUILD_FILTER[obType]||(()=>true);
+  const recGuilds=SAMPLE_GUILDS.filter(filt)
+    .sort((a,b)=>Math.abs(tmin(a.time)-tmin(wakeTime))-Math.abs(tmin(b.time)-tmin(wakeTime)))
+    .slice(0,3);
+  obPickedGuild=recGuilds[0]?recGuilds[0].id:null;
+  const ddayHtml = S.user.dday ? `<div class="ob-dday"><div class="dn">D-${ddayLeft(S.user.dday)}</div><div class="dl">${S.user.ddayLabel||"목표일"}까지</div></div>` : "";
+  document.getElementById("obStep").innerHTML=`
+    <div class="ob-kicker">진단 완료</div>
+    <div class="ob-title">${S.user.name||"회원"}님은 <span style="color:var(--blue)">${wt.emoji} ${wt.name}</span></div>
+    <div class="ob-sub">${wt.line}</div>
+    ${ddayHtml}
+    <div class="ob-result-card">
+      <div class="rh"><div class="re">⏰</div><div><b style="font-size:17px;">${wakeTime} 알람</b><div class="muted" style="font-size:12px;">평일 · 자동 설정됨</div></div></div>
+      <div style="height:8px"></div>
+      <div class="ob-rrow"><span class="ri">🎯</span><span>미션 &nbsp;<b>${missionNames}</b></span></div>
+      <div class="ob-rrow"><span class="ri">🎵</span><span>알람음 &nbsp;<b>${snd.name}</b></span></div>
+    </div>
+    ${recGuilds.length?`<div class="ob-kicker" style="margin-top:24px;">함께할 길드 추천</div>
+      <div class="ob-sub" style="margin-top:0;">탭해서 선택 (나중에 바꿀 수 있어요)</div>
+      ${recGuilds.map(g=>`<div class="ob-gcard ${g.id===obPickedGuild?"sel":""}" data-gid="${g.id}" onclick="obPickGuild('${g.id}')">
+        <div class="ava">${g.emoji}</div><div style="flex:1;"><b>${g.name}</b><div class="muted" style="font-size:12px;">목표 ${g.time} · ${g.members}명 · 🔥${g.streak}</div></div>
+        <span class="dot ${g.id===obPickedGuild?"up":"no"}"></span></div>`).join("")}
+      <div class="ob-gcard ${obPickedGuild===null?"sel":""}" data-gid="" onclick="obPickGuild('')" style="justify-content:center;">
+        <span class="muted">나중에 가입할게요</span></div>`:""}
+    <div class="ob-foot">
+      <button class="btn" onclick="obFinish('${wakeTime}')">${obPickedGuild?"이 설정으로 시작하기 🚀":"내 알람 시작하기 🚀"}</button>
+      <div class="muted" style="text-align:center;font-size:12px;margin-top:10px;">시작 후 친구를 초대하면 면제권과 포인트를 받아요 🤝</div>
+    </div>`;
+}
+function obPickGuild(gid){
+  obPickedGuild=gid||null;
+  document.querySelectorAll(".ob-gcard").forEach(c=>{
+    const on=(c.dataset.gid||"")===(gid||"");
+    c.classList.toggle("sel",on);const d=c.querySelector(".dot");if(d)d.className="dot "+(on?"up":"no");
+  });
+  const btn=document.querySelector(".ob-foot .btn");if(btn)btn.textContent=obPickedGuild?"이 설정으로 시작하기 🚀":"내 알람 시작하기 🚀";
+}
+function obFinish(wakeTime){
+  const wt=WAKE_TYPES[S.user.wakeType]||WAKE_TYPES.relapse;
+  const firstAlarm={id:uid(),type:"normal",time:wakeTime,label:S.user.ddayLabel?S.user.ddayLabel+" 기상":"아침 기상",
+    days:[1,2,3,4,5],missions:wt.missions.map(m=>({...m})),sound:wt.sound,bg:"sunrise",enabled:true};
+  const onlyDefault = S.alarms.length===1 && S.alarms[0].label==="기상" && S.alarms[0].time==="07:00";
+  if(onlyDefault)S.alarms=[];
+  S.alarms.unshift(firstAlarm);
+  if(obPickedGuild){
+    const g=SAMPLE_GUILDS.find(x=>x.id===obPickedGuild);
+    if(g && !S.guilds.some(x=>x.id===g.id)){
+      const members=[{name:"나",me:true,wokeToday:false,streak:S.user.streak,weekScore:0}];
+      const pool=BOT_NAMES.slice().sort(()=>Math.random()-.5);
+      for(let i=0;i<Math.min(g.members-1,9);i++)members.push({name:pool[i],wokeToday:Math.random()<.5,streak:Math.floor(Math.random()*30),weekScore:botWeekScore()});
+      S.guilds.push({id:g.id,name:g.name,emoji:g.emoji,time:g.time,type:g.type,password:g.password||"",region:g.region,age:g.age,streak:g.streak,members,target:7,todayCount:members.filter(m=>m.wokeToday).length,leader:false,league:g.streak>40?3:g.streak>15?2:1,weekStart:mondayOfBoot(todayStrBoot())});
+    }
+  }
+  S.user.onboarded=true;save();
+  document.getElementById("onboard").classList.remove("show");
+  renderHome();go("home");
+  toast(obPickedGuild?"세팅 완료! 길드에 가입했어요 🎉":"세팅 완료! 첫 알람이 켜졌어요 🎉");
+}
+function tmin(t){const[h,m]=t.split(":").map(Number);return h*60+m;}
+function ddayLeft(iso){const t=new Date(iso+"T00:00:00");const now=new Date();now.setHours(0,0,0,0);return Math.max(0,Math.round((t-now)/86400000));}
+function editDday(){
+  const cur=S.user.dday||"";
+  const v=prompt("목표일을 입력하세요 (YYYY-MM-DD). 비우면 D-day를 없앱니다.",cur);
+  if(v===null)return;
+  if(v.trim()===""){S.user.dday=null;S.user.ddayLabel="";save();renderHome();toast("D-day를 없앴어요");return;}
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(v.trim())){toast("형식이 올바르지 않아요 (예: 2026-11-13)");return;}
+  const lbl=prompt("이 날의 이름은? (예: 수능, 자격증 시험)",S.user.ddayLabel||"목표일");
+  S.user.dday=v.trim();S.user.ddayLabel=(lbl||"목표일").trim();save();renderHome();toast("D-day를 업데이트했어요");
+}
+function restartOnboarding(){startOnboarding();}
+function dismissNote(key){delete S.user[key];save();renderHome();}
+
+/* ============ 부팅 ============ */
+processStreakOnBoot();
+processLeagueOnBoot();
+if(!S.user.onboarded){startOnboarding();}
+renderHome();
+// 지난 주 리그 결과가 있으면 보여주기 (온보딩 중이 아닐 때)
+if(S.user.onboarded && pendingLeagueResults.length){setTimeout(()=>showLeagueResults(),600);}
+</script>
+</body>
+</html>
