@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#11142a">
@@ -90,8 +90,9 @@
   .day.on{background:var(--blue2);border-color:var(--blue2);color:#fff;font-weight:700;}
   /* ring overlay */
   #ring{position:fixed;inset:0;z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;
-    text-align:center;padding:24px;color:#fff;}
+    text-align:center;padding:24px;color:#fff;overflow-y:auto;}
   #ring.show{display:flex;}
+  #ring.kbd{justify-content:flex-start;padding-top:18px;}
   #ring .now{font-size:64px;font-weight:900;letter-spacing:-2px;text-shadow:0 4px 30px rgba(0,0,0,.4);}
   #ring .lbl{font-size:18px;opacity:.92;margin-top:4px;}
   #ring .bell{font-size:54px;animation:ring .6s infinite;}
@@ -123,6 +124,9 @@
   .barwrap .b span{position:absolute;bottom:-20px;left:0;right:0;text-align:center;font-size:10px;color:var(--sub);}
   .sectitle{font-size:13.5px;color:var(--txt);font-weight:800;margin:20px 2px 9px;display:flex;align-items:center;gap:7px;}
   .sectitle::before{content:"";width:4px;height:14px;border-radius:3px;background:var(--blue);display:inline-block;}
+  .pickrow{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:14px;cursor:pointer;font-size:15px;}
+  .pickrow .chev{color:var(--sub);font-size:20px;}
   .hide{display:none!important;}
   /* 받는 입장: 자는 화면 + 푸시 배너 */
   #sleep{position:fixed;inset:0;z-index:95;background:radial-gradient(circle at 50% 32%,#1a2050,#070912);
@@ -196,13 +200,14 @@
     <label class="fl">기상 미션 <span class="muted" style="font-weight:400">(최대 5개 · 2개째부터 Pro)</span></label>
     <div id="aeMissions"></div>
     <button class="btn sec sm" id="aeAddBtn" style="margin-top:8px;width:auto;" onclick="addMissionRow()">＋ 미션 추가</button>
-    <label class="fl">알람음 <span class="muted" style="font-weight:400">(설정 &gt; 알람음 마켓에서 추가)</span></label>
-    <select id="aeSound"></select>
-    <button class="btn sec sm" style="margin-top:8px;width:auto;" onclick="previewSound()">🔊 미리듣기</button>
-    <label class="fl">알람 배경</label>
-    <div class="opts" id="aeBg"></div>
-    <button class="btn" style="margin-top:20px;" onclick="saveAlarm()">저장</button>
-    <button class="btn ghost" id="aeDelete" onclick="deleteAlarm()" style="margin-top:4px;display:none;">삭제</button>
+    <label class="fl">알람음</label>
+    <div class="pickrow" id="aeSoundRow" onclick="openSoundPicker()"></div>
+    <label class="fl">알람 배경 (알람화면)</label>
+    <div class="pickrow" id="aeBgRow" onclick="openBgPicker()"></div>
+    <div style="display:flex;gap:8px;margin-top:24px;">
+      <button class="btn ghost" id="aeDelete" onclick="deleteAlarm()" style="display:none;width:auto;color:var(--red);box-shadow:none;">삭제</button>
+      <button class="btn" style="flex:1;" onclick="saveAlarm()">저장</button>
+    </div>
   </div>
 </div>
 
@@ -214,6 +219,31 @@
   <div class="missionbox" id="missionBox"></div>
   <button class="btn sec" id="snoozeBtn" style="margin-top:16px;max-width:360px;background:rgba(255,255,255,.18);border:none;color:#fff;" onclick="snooze()">5분 더 자기 (스누즈)</button>
 </div>
+
+<!-- ===== 알람음 선택 페이지 ===== -->
+<div class="modal" id="soundPickerModal"><div class="sheet">
+  <div class="row between"><h2 style="font-size:18px;">알람음 선택</h2><div class="iconbtn" onclick="closeModal('soundPickerModal')">✕</div></div>
+  <div id="soundPickerList" style="margin-top:10px;"></div>
+  <button class="btn sec" style="margin-top:10px;" onclick="closeModal('soundPickerModal');recordVoice()">＋ 새 음성/AI 모닝콜 만들기</button>
+</div></div>
+
+<!-- ===== 알람 배경 선택 페이지 ===== -->
+<div class="modal" id="bgPickerModal"><div class="sheet">
+  <div class="row between"><h2 style="font-size:18px;">알람 배경 선택</h2><div class="iconbtn" onclick="closeModal('bgPickerModal')">✕</div></div>
+  <div id="bgPickerList" style="margin-top:10px;"></div>
+</div></div>
+
+<!-- ===== 모닝콜 보내기 ===== -->
+<div class="modal" id="callSendModal"><div class="sheet">
+  <div class="row between"><h2 style="font-size:18px;">🎙️ 모닝콜 보내기</h2><div class="iconbtn" onclick="closeModal('callSendModal')">✕</div></div>
+  <label class="fl">받는 사람 선택</label>
+  <div class="chiprow" id="callMembers"></div>
+  <label class="fl">보낼 모닝콜 (내가 만든 것)</label>
+  <div id="callSounds"></div>
+  <label class="fl">⚡ 일회성으로 보내기 (저장 안 함)</label>
+  <div class="row" style="gap:8px;"><input type="text" id="callOnceText" placeholder="예: 야 일어나! 지각이야"><button class="btn" style="width:auto;" onclick="sendOnce()">보내기</button></div>
+  <button class="btn sec" style="margin-top:12px;" onclick="closeModal('callSendModal');recordVoice()">＋ 새 모닝콜 만들기</button>
+</div></div>
 
 <!-- ===== Pro 구독 ===== -->
 <div class="modal" id="proModal">
@@ -312,6 +342,15 @@ const SAMPLE_GUILDS=[
   {id:"g3",name:"자취생 1교시 사수",emoji:"🎓",region:"전국",age:"대학",time:"07:30",members:6,streak:9,tags:["자유","대학생"],type:"free"},
   {id:"g4",name:"중딩 등교 전쟁",emoji:"🏫",region:"경기",age:"중등",time:"07:00",members:7,streak:21,tags:["조건","등교"],type:"cond"},
   {id:"g5",name:"아무나 모여요",emoji:"☀️",region:"전국",age:"전체",time:"08:00",members:4,streak:3,tags:["자유"],type:"free"},
+  {id:"g6",name:"중학생 아침독서",emoji:"📖",region:"부산",age:"중등",time:"06:40",members:5,streak:11,tags:["조건"],type:"cond"},
+  {id:"g7",name:"고등 모의고사 부대",emoji:"✏️",region:"대구",age:"고등",time:"06:20",members:9,streak:30,tags:["조건"],type:"cond"},
+  {id:"g8",name:"대학생 공시반",emoji:"🏛️",region:"서울",age:"대학",time:"06:00",members:7,streak:18,tags:["조건"],type:"cond"},
+  {id:"g9",name:"직장인 미라클",emoji:"💼",region:"전국",age:"성인",time:"05:30",members:10,streak:55,tags:["조건"],type:"cond"},
+  {id:"g10",name:"누구나 굿모닝",emoji:"🌤️",region:"전국",age:"전체",time:"07:00",members:6,streak:7,tags:["자유"],type:"free"},
+  {id:"g11",name:"고등 새벽기상단",emoji:"🌙",region:"인천",age:"고등",time:"05:50",members:8,streak:24,tags:["조건"],type:"cond"},
+  {id:"g12",name:"대학 1교시 동맹",emoji:"☕",region:"전국",age:"대학",time:"08:00",members:5,streak:6,tags:["자유"],type:"free"},
+  {id:"g13",name:"중등 아침운동",emoji:"⚽",region:"경기",age:"중등",time:"06:30",members:4,streak:13,tags:["조건"],type:"cond"},
+  {id:"g14",name:"수험생 비밀방",emoji:"🔒",region:"서울",age:"고등",time:"05:00",members:7,streak:33,tags:["조건"],type:"cond",password:"5678"},
 ];
 const BOT_NAMES=["민준","서연","도윤","하은","지호","수아","예준","채원","유찬","소율"];
 
@@ -335,7 +374,7 @@ function load(){
     guilds:[]
   };
 }
-const FREE_ALARMS=2, FREE_GUILDS=2;
+const FREE_ALARMS=2, FREE_GUILDS=1;
 function isPro(){return !!S.user.pro;}
 function requirePro(feat){if(isPro())return true;showPro(feat);return false;}
 function val(id){const e=document.getElementById(id);return e?e.value:"";}
@@ -392,7 +431,7 @@ function alarmCard(a){
       <div class="alarm ${a.enabled?"":"off"}">
         <div onclick="editGuildAlarm('${a.id}')" style="flex:1;">
           <div class="t">${time} <span style="font-size:13px;color:var(--sub);">🔒</span></div>
-          <div class="meta">🛡️ ${g?g.emoji+" "+g.name:(a.label||"길드")} · ${days} · ${leader?"길드장(시간 고정)":"길드장만 수정"}</div>
+          <div class="meta">🛡️ ${g?g.emoji+" "+g.name:(a.label||"길드")} · ${days} · ${leader?"길드장 · 시간고정":"벨소리·화면만 변경"}</div>
         </div>
         <div class="sw ${a.enabled?"on":""}" onclick="toggleAlarm('${a.id}')"></div>
       </div>
@@ -421,19 +460,18 @@ function alarmCard(a){
   return el;
 }
 function gotoGuild(gid){go('guild');renderGuildDetail(gid);}
-function editGuildAlarm(id){const a=S.alarms.find(x=>x.id===id);if(!a)return;const g=getGuild(a.guildId);
-  if(!g||!g.leader){toast("길드 알람은 길드장만 수정할 수 있어요 (시간은 고정)");return;}
-  openAlarmEditor(id);}
+function editGuildAlarm(id){openAlarmEditor(id);}
 function toggleAlarm(id){const a=S.alarms.find(x=>x.id===id);a.enabled=!a.enabled;save();renderHome();}
 
 /* ===== 알람 편집 ===== */
 let editingId=null;
 function openAlarmEditor(id){
   const ed=id?S.alarms.find(x=>x.id===id):null;
-  if(ed&&ed.type==="guild"){const g=getGuild(ed.guildId);if(!g||!g.leader){toast("길드 알람은 길드장만 수정할 수 있어요");return;}}
   if(!id && S.alarms.length>=FREE_ALARMS && !isPro()){showPro("알람 "+(FREE_ALARMS+1)+"개 이상");return;}
   editingId=id||null;
   const a=ed||{type:"normal",time:"07:00",label:"",days:[1,2,3,4,5],mission:"math",sound:"bell",bg:"indigo"};
+  const isGuildA=a.type==="guild";
+  aeCanEditAll = !isGuildA || !!(getGuild(a.guildId)&&getGuild(a.guildId).leader); // 길드장만 미션·요일 편집, 길드원은 벨소리·화면만
   document.getElementById("aeTitle").textContent=id?(a.type==="guild"?"길드 알람 편집":"알람 편집"):"알람 추가";
   const timeEl=document.getElementById("aeTime");timeEl.value=a.time;timeEl.disabled=(a.type==="guild");timeEl.style.opacity=a.type==="guild"?".55":"1";
   document.getElementById("aeTimeNote").classList.toggle("hide",a.type!=="guild");
@@ -447,18 +485,12 @@ function openAlarmEditor(id){
   aeMissionsData=(a.missions&&a.missions.length?a.missions:[{type:a.mission||"math",count:defaultCount(a.mission||"math"),difficulty:"normal"}])
     .map(m=>({type:m.type,count:m.count||defaultCount(m.type),difficulty:m.difficulty||"normal"}));
   renderMissionRows();
-  // sound
-  const ss=document.getElementById("aeSound");ss.innerHTML="";
-  allSounds().forEach(s=>{const o=document.createElement("option");o.value=s.id;
-    const locked=s.pro&&!isPro();o.textContent=s.name+(locked?" 🔒 Pro":"");o.disabled=locked;
-    if(s.id===a.sound)o.selected=true;ss.appendChild(o);});
-  // bg
-  const bb=document.getElementById("aeBg");bb.innerHTML="";
-  Object.entries(BGS).forEach(([k,v])=>{const locked=v.pro&&!isPro();const e=document.createElement("div");e.className="opt"+(a.bg===k?" on":"");
-    e.dataset.k=k;e.innerHTML=`<span class="e" style="display:inline-block;width:18px;height:18px;border-radius:5px;background:${v.g}"></span><br>${v.n}${locked?" 🔒":""}`;
-    if(locked)e.style.opacity=".55";
-    e.onclick=()=>{if(locked){showPro("프리미엄 배경");return;}bb.querySelectorAll(".opt").forEach(o=>o.classList.remove("on"));e.classList.add("on");};bb.appendChild(e);});
-  document.getElementById("aeDelete").style.display=id?"block":"none";
+  // sound & bg (별도 선택 페이지)
+  aeSel={sound:a.sound||"bell",bg:a.bg||"indigo"};
+  updatePickRows();
+  const lblEl=document.getElementById("aeLabel");lblEl.disabled=!aeCanEditAll;lblEl.style.opacity=aeCanEditAll?"1":".55";
+  const dEl=document.getElementById("aeDays");dEl.style.pointerEvents=aeCanEditAll?"":"none";dEl.style.opacity=aeCanEditAll?"1":".55";
+  document.getElementById("aeDelete").style.display=(id&&a.type!=="guild")?"block":"none";
   openModal("alarmModal");
 }
 function saveAlarm(){
@@ -466,19 +498,27 @@ function saveAlarm(){
   const missions=aeMissionsData.length
     ? aeMissionsData.map(m=>({type:m.type,count:HAS_COUNT[m.type]?Math.max(1,Math.min(99,m.count||1)):1,difficulty:m.difficulty||"normal"}))
     : [{type:"none",count:1,difficulty:"normal"}];
-  const bg=document.querySelector("#aeBg .opt.on")?.dataset.k||"indigo";
   const data={time:document.getElementById("aeTime").value,label:document.getElementById("aeLabel").value.trim(),
-    days,missions,sound:document.getElementById("aeSound").value,bg,enabled:true};
+    days,missions,sound:aeSel.sound,bg:aeSel.bg,enabled:true};
   if(editingId){const ex=S.alarms.find(x=>x.id===editingId);
-    if(ex.type==="guild"){const g=getGuild(ex.guildId);data.time=g?g.time:ex.time;}   // 길드 알람은 시간 고정
-    delete ex.mission;Object.assign(ex,data);}
+    if(ex.type==="guild"){
+      const g=getGuild(ex.guildId);
+      if(g&&g.leader){data.time=g?g.time:ex.time;delete ex.mission;Object.assign(ex,data);}  // 길드장: 시간 제외 전체
+      else{ex.sound=data.sound;ex.bg=data.bg;}                                                  // 길드원: 벨소리·화면만
+    } else {delete ex.mission;Object.assign(ex,data);}
+  }
   else{data.id=uid();data.type="normal";S.alarms.push(data);}
   save();closeModal("alarmModal");renderHome();toast("알람을 저장했어요");
 }
 /* ===== 다중 미션 편집 ===== */
-let aeMissionsData=[],aeIsGuild=false;
+let aeMissionsData=[],aeIsGuild=false,aeCanEditAll=true;
 function renderMissionRows(){
   const c=document.getElementById("aeMissions");c.innerHTML="";
+  const addBtn0=document.getElementById("aeAddBtn");
+  if(!aeCanEditAll){   // 길드원: 미션은 길드장이 정함 (읽기 전용)
+    c.innerHTML=`<div class="card" style="margin:0;background:var(--card2);"><div class="muted" style="font-size:12px;margin-bottom:7px;">미션은 길드장이 정해요. 벨소리·알람화면만 바꿀 수 있어요.</div>${aeMissionsData.map(m=>`<span class="chip on" style="margin:0 4px 4px 0;display:inline-block;">${MISSIONS[m.type].e} ${MISSIONS[m.type].n}${HAS_COUNT[m.type]?" ×"+m.count:""}</span>`).join("")}</div>`;
+    if(addBtn0)addBtn0.style.display="none";return;
+  }
   aeMissionsData.forEach((m,i)=>{
     const row=document.createElement("div");
     row.style.cssText="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;";
@@ -531,7 +571,63 @@ function startSound(sndId){
 }
 function stopSound(){if(soundTimer){clearInterval(soundTimer);soundTimer=null;}if(voiceAudio){voiceAudio.pause();voiceAudio=null;}
   voicePlaying=false;if(voiceSrc){try{voiceSrc.stop();}catch(e){}voiceSrc=null;}stopSpeak();}
-function previewSound(){const id=document.getElementById("aeSound").value;startSound(id);setTimeout(stopSound,3500);}
+let aeSel={sound:"bell",bg:"indigo"};
+function updatePickRows(){
+  const snd=allSounds().find(s=>s.id===aeSel.sound);
+  const sIc=snd?(snd.type==="voice"?"🎙️ ":snd.type==="tts"?"✨ ":"🎵 "):"";
+  const sr=document.getElementById("aeSoundRow");if(sr)sr.innerHTML=`<span>${sIc}${snd?snd.name:"기본"}</span><span class="chev">›</span>`;
+  const bg=BGS[aeSel.bg]||BGS.indigo;
+  const br=document.getElementById("aeBgRow");if(br)br.innerHTML=`<span><span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:${bg.g};vertical-align:-3px;margin-right:8px;"></span>${bg.n}</span><span class="chev">›</span>`;
+}
+function openSoundPicker(){
+  const list=document.getElementById("soundPickerList");list.innerHTML="";
+  allSounds().forEach(s=>{const locked=s.pro&&!isPro(),sel=s.id===aeSel.sound;
+    const ic=s.type==="voice"?"🎙️":s.type==="tts"?"✨":"🎵";
+    const bg=s.type==="tts"?"linear-gradient(135deg,#28c98a,#3a5bff)":s.type==="voice"?"linear-gradient(135deg,#ff6fae,#7b4bff)":"linear-gradient(135deg,#3a5bff,#7b4bff)";
+    const el=document.createElement("div");el.className="mem";el.style.cursor="pointer";
+    el.innerHTML=`<div class="ava" style="background:${bg};">${ic}</div>
+      <div style="flex:1;font-weight:600;">${s.name} ${locked?'<span class="chip" style="border-color:#6b4bb0;color:#c9b6ff;">🔒 Pro</span>':""} ${sel?'<span style="color:var(--green);">✓</span>':""}</div>
+      <button class="btn sm sec" onclick="event.stopPropagation();startSound('${s.id}');setTimeout(stopSound,3000);">▶</button>`;
+    el.onclick=()=>{if(locked){showPro("프리미엄 사운드");return;}aeSel.sound=s.id;updatePickRows();closeModal("soundPickerModal");};
+    list.appendChild(el);});
+  openModal("soundPickerModal");
+}
+function openBgPicker(){
+  const list=document.getElementById("bgPickerList");list.innerHTML="";
+  Object.entries(BGS).forEach(([k,v])=>{const locked=v.pro&&!isPro(),sel=k===aeSel.bg;
+    const el=document.createElement("div");el.className="mem";el.style.cursor="pointer";
+    el.innerHTML=`<div style="width:54px;height:40px;border-radius:9px;background:${v.g};margin-right:11px;border:1px solid var(--line);flex:0 0 auto;"></div>
+      <div style="flex:1;font-weight:600;">${v.n} ${locked?'<span class="chip" style="border-color:#6b4bb0;color:#c9b6ff;">🔒 Pro</span>':""} ${sel?'<span style="color:var(--green);">✓</span>':""}</div>`;
+    el.onclick=()=>{if(locked){showPro("프리미엄 배경");return;}aeSel.bg=k;updatePickRows();closeModal("bgPickerModal");};
+    list.appendChild(el);});
+  openModal("bgPickerModal");
+}
+/* 길드원 선택 → 모닝콜 보내기 */
+let callTo=null;
+function openCallSend(gid){const g=getGuild(gid);if(!g)return;
+  if(!requirePro("길드원에게 모닝콜 보내기"))return;
+  const others=g.members.filter(m=>!m.me&&!m.wokeToday);   // 아직 자는 중인 사람에게만
+  if(!others.length){toast("지금은 길드원이 모두 일어났어요! ☀️");return;}
+  callTo=others[0].name;
+  const cm=document.getElementById("callMembers");cm.innerHTML="";
+  others.forEach(m=>{const c=document.createElement("span");c.className="chip"+(m.name===callTo?" on":"");c.textContent=m.name;
+    c.onclick=()=>{cm.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));c.classList.add("on");callTo=m.name;};cm.appendChild(c);});
+  const cs=S.customSounds,cl=document.getElementById("callSounds");cl.innerHTML="";
+  if(!cs.length)cl.innerHTML='<div class="muted" style="font-size:13px;padding:8px 2px;">아직 만든 모닝콜이 없어요. 아래에서 만들어보세요.</div>';
+  else cs.forEach(s=>{const ic=s.type==="tts"?"✨":"🎙️";const el=document.createElement("div");el.className="mem";
+    el.innerHTML=`<div class="ava" style="background:${s.type==="tts"?"linear-gradient(135deg,#28c98a,#3a5bff)":"linear-gradient(135deg,#ff6fae,#7b4bff)"};">${ic}</div>
+      <div style="flex:1;font-weight:600;">${s.name}</div>
+      <button class="btn sm sec" onclick="startSound('${s.id}');setTimeout(stopSound,3000);">▶</button>
+      <button class="btn sm" style="margin-left:6px;" onclick="sendCall('${s.id}')">보내기</button>`;
+    cl.appendChild(el);});
+  openModal("callSendModal");
+}
+function sendCall(soundId){if(!callTo){toast("받는 사람을 선택하세요");return;}
+  const s=allSounds().find(x=>x.id===soundId);closeModal("callSendModal");
+  toast("🎙️ "+callTo+"님에게 '"+(s?s.name:"모닝콜")+"'을 보냈어요!");}
+function sendOnce(){if(!callTo){toast("받는 사람을 선택하세요");return;}
+  const t=val("callOnceText").trim();if(!t){toast("보낼 메시지를 입력하세요");return;}
+  closeModal("callSendModal");toast("⚡ "+callTo+"님에게 일회성 모닝콜을 보냈어요!");}
 /* 녹음 음성을 고양이/강아지로 피치 변조해 반복 재생 */
 function playVoiceBuffer(snd){
   ensureCtx();
@@ -911,7 +1007,6 @@ function renderGuild(){
       <div class="row" style="gap:8px;"><button class="btn" onclick="renderGuildFinder()">길드 찾기</button>
       <button class="btn sec" onclick="renderGuildCreate()">＋ 만들기</button></div>
     </div>
-    <button class="btn" style="background:linear-gradient(135deg,#ff7b54,#ff5d6c);margin-bottom:12px;" onclick="startWakeDemo()">😴 친구가 나를 깨우는 상황 체험</button>
     <div class="sectitle">길드란?</div>
     <div class="card muted" style="font-size:13px;line-height:1.6;">
       • 지역·나이대 조건이 있는 <b style="color:#cdd6ff">조건 서버</b>와 누구나 들어가는 <b style="color:#cdd6ff">자유 서버</b>가 있어요.<br>
@@ -933,17 +1028,17 @@ function renderGuild(){
       <div class="progress" style="margin-top:11px;"><div style="width:${woke/g.members.length*100}%;background:var(--green);"></div></div>
     </div>`;
   });
-  html+=`<button class="btn sec" style="margin-top:2px;" onclick="renderGuildCreate()">＋ 새 길드 만들기</button>
-    <button class="btn" style="background:linear-gradient(135deg,#ff7b54,#ff5d6c);margin-top:10px;" onclick="startWakeDemo()">😴 친구가 나를 깨우는 상황 체험</button>`;
+  html+=`<button class="btn sec" style="margin-top:2px;" onclick="renderGuildCreate()">＋ 새 길드 만들기</button>`;
   v.innerHTML=html;
 }
 
 function renderGuildDetail(id){
   const g=getGuild(id);if(!g){renderGuild();return;}
   const woke=g.members.filter(m=>m.wokeToday).length;
+  const hasGA=S.alarms.some(a=>a.type==="guild"&&a.guildId===id);
   const v=document.getElementById("guildView");
   v.innerHTML=`
-    <div class="row" style="gap:8px;margin-bottom:12px;"><div class="iconbtn" onclick="renderGuild()">←</div><b style="font-size:15px;">내 길드로</b></div>
+    <div class="row" style="gap:8px;margin-bottom:12px;align-items:center;"><div class="iconbtn" onclick="renderGuild()">←</div><b style="flex:1;font-size:15px;">${g.emoji} ${g.name}</b><div class="iconbtn" onclick="shareGuild('${g.id}')" title="공유·초대">🔗</div></div>
     <div class="card" style="background:linear-gradient(135deg,#28306a,#1a1f44);">
       <div class="row between"><div><div style="font-size:22px;font-weight:900;">${g.emoji} ${g.name}</div>
       <div class="muted" style="margin-top:4px;">목표 기상 ${g.time} · ${g.members.length}/10명 · ${g.type==="cond"?"조건 서버":"자유 서버"}${g.password?" · 🔒":""}</div></div>
@@ -951,19 +1046,19 @@ function renderGuildDetail(id){
       ${g.password?`<div class="muted" style="font-size:12px;margin-top:8px;">🔒 비밀번호: <b style="color:#cdd6ff">${g.password}</b></div>`:""}
       ${g.type==="cond"?`<div class="muted" style="font-size:12px;margin-top:4px;">✅ ${g.age!=="전체"?g.age+" ":""}${g.region!=="전국"?g.region+" ":""}인증자만 가입 가능</div>`:""}
     </div>
-    <button class="btn" style="margin-bottom:8px;" onclick="quickGuildAlarm('${g.id}')">⏰ 이 길드 기상시간(${g.time})으로 알람 추가</button>
-    <button class="btn sec" style="margin-bottom:12px;" onclick="shareGuild('${g.id}')">🔗 길드 공유 / 친구 초대</button>
+    ${hasGA
+      ? `<button class="btn sec" style="margin-bottom:8px;" onclick="go('home')">⏰ 내 알람으로 이동</button>`
+      : `<button class="btn" style="margin-bottom:8px;" onclick="quickGuildAlarm('${g.id}')">⏰ 이 길드 기상시간(${g.time})으로 알람 추가</button>`}
     <div class="card">
       <div class="row between"><b>오늘 우리 길드</b><span class="muted">${woke}/${g.members.length} 기상</span></div>
       <div class="progress" style="background:rgba(255,255,255,.12);margin-top:12px;"><div style="width:${woke/g.members.length*100}%;background:var(--green);"></div></div>
       <div class="muted" style="margin-top:10px;font-size:12px;">🎯 주간 공동 목표: <b style="color:#cdd6ff">${g.todayCount||woke}/${g.target} 달성</b> · 달성 시 전원 +100P</div>
     </div>
-    <button class="btn" style="background:linear-gradient(135deg,#ff7b54,#ff5d6c);margin-bottom:12px;" onclick="startWakeDemo('${g.id}')">😴 친구가 나를 깨우는 상황 체험</button>
     <div class="sectitle">📸 오늘의 기상 인증</div>
     <div class="card" id="guildFeed"></div>
     <div class="sectitle">길드원 (서로 깨워주기)</div>
     <div class="card" id="memList"></div>
-    <button class="btn sec" style="margin-top:4px;" onclick="recordVoice()">🎙️ 이 길드에 음성 모닝콜 보내기</button>
+    <button class="btn sec" style="margin-top:4px;" onclick="openCallSend('${g.id}')">🎙️ 길드원에게 음성 모닝콜 보내기</button>
     <button class="btn ghost" style="margin-top:6px;color:var(--red);" onclick="leaveGuild('${g.id}')">길드 나가기</button>`;
   // 기상 인증 피드
   const fd=document.getElementById("guildFeed");
@@ -978,9 +1073,8 @@ function renderGuildDetail(id){
   g.members.forEach((m,i)=>{
     const el=document.createElement("div");el.className="mem";
     el.innerHTML=`<div class="ava ${m.wokeToday?"":"gray"}">${m.wokeToday?"😆":"😴"}</div>
-      <div style="flex:1;"><div style="font-weight:700;">${m.name}${m.me?" (나)":""}</div>
+      <div style="flex:1;"><div style="font-weight:700;display:flex;align-items:center;gap:6px;">${m.name}${m.me?" (나)":""}<span class="dot ${m.wokeToday?"up":"no"}"></span></div>
         <div class="muted" style="font-size:12px;">${m.wokeToday?"오늘 기상 완료":"아직 자는 중"} · 🔥${m.streak}일</div></div>
-      <div class="dot ${m.wokeToday?"up":"no"}"></div>
       ${(!m.me&&!m.wokeToday)?`<button class="btn sm sec" onclick="poke('${g.id}',${i})">👉 깨우기</button>`:
         (!m.me?`<button class="btn sm sec" onclick="stamp('${g.id}',${i})">👏</button>`:"")}`;
     ml.appendChild(el);
@@ -1000,39 +1094,57 @@ function quickGuildAlarm(gid){
 }
 function leaveGuild(gid){if(confirm("이 길드를 나갈까요?")){S.guilds=S.guilds.filter(g=>g.id!==gid);save();renderGuild();}}
 
+let gPage=0;
 function renderGuildFinder(){
+  gPage=0;
   const v=document.getElementById("guildView");
   v.innerHTML=`
-    <div class="row" style="gap:8px;margin-bottom:6px;"><div class="iconbtn" onclick="renderGuild()">←</div>
-    <input type="text" id="gSearch" placeholder="검색: 새벽5시, 고3, 자취..." oninput="filterGuilds()"></div>
-    <div class="chiprow" id="gFilters" style="margin-bottom:6px;"></div>
-    <div id="gResults"></div>
-    <button class="btn sec" style="margin-top:8px;" onclick="renderGuildCreate()">＋ 새 길드 만들기</button>`;
+    <div class="row" style="gap:8px;margin-bottom:12px;align-items:center;">
+      <div class="iconbtn" onclick="renderGuild()">←</div>
+      <b style="flex:1;font-size:16px;">길드 찾기</b>
+      <button class="btn sm" onclick="renderGuildCreate()">＋ 새 길드</button>
+    </div>
+    <input type="text" id="gSearch" placeholder="검색: 새벽5시, 수능, 자취..." oninput="gPage=0;filterGuilds()">
+    <div class="muted" style="font-size:11px;margin:14px 2px 7px;">대상별 필터 (조건 서버는 해당 대상 인증자만 가입)</div>
+    <div class="chiprow" id="gFilters"></div>
+    <div id="gResults" style="margin-top:8px;"></div>
+    <div id="gPager" class="row" style="justify-content:center;gap:16px;margin-top:12px;"></div>`;
   const f=document.getElementById("gFilters");
-  ["전체","자유","조건","고등","대학","중등"].forEach((t,i)=>{const c=document.createElement("span");
-    c.className="chip"+(i===0?" on":"");c.textContent=t;c.onclick=()=>{f.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));c.classList.add("on");filterGuilds();};f.appendChild(c);});
+  [["전체",""],["🌐 자유 서버","free"],["🎒 중등","중등"],["📗 고등","고등"],["🎓 대학","대학"],["💼 성인","성인"]].forEach((t,i)=>{
+    const c=document.createElement("span");c.className="chip"+(i===0?" on":"");c.textContent=t[0];c.dataset.v=t[1];
+    c.onclick=()=>{f.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));c.classList.add("on");gPage=0;filterGuilds();};f.appendChild(c);});
   filterGuilds();
 }
 function filterGuilds(){
   const q=(document.getElementById("gSearch").value||"").toLowerCase();
-  const fil=document.querySelector("#gFilters .chip.on")?.textContent||"전체";
-  const res=document.getElementById("gResults");res.innerHTML="";
-  SAMPLE_GUILDS.filter(g=>{
+  const fil=document.querySelector("#gFilters .chip.on")?.dataset.v||"";
+  const matches=SAMPLE_GUILDS.filter(g=>{
     const hay=(g.name+g.tags.join()+g.age+g.region+g.time).toLowerCase();
     const okq=!q||hay.includes(q);
-    const okf=fil==="전체"||g.tags.includes(fil)||g.age.includes(fil)||(fil==="자유"&&g.type==="free")||(fil==="조건"&&g.type==="cond");
+    let okf=true;
+    if(fil==="free")okf=g.type==="free";
+    else if(fil)okf=(g.age===fil);   // 중등/고등/대학/성인 대상 길드
     return okq&&okf;
-  }).forEach(g=>{
+  });
+  const per=5,pages=Math.max(1,Math.ceil(matches.length/per));
+  if(gPage>=pages)gPage=pages-1; if(gPage<0)gPage=0;
+  const slice=matches.slice(gPage*per,gPage*per+per);
+  const res=document.getElementById("gResults");res.innerHTML="";
+  if(!slice.length)res.innerHTML='<div class="muted" style="text-align:center;padding:24px;">검색 결과가 없어요</div>';
+  slice.forEach(g=>{
     const joined=S.guilds.some(x=>x.id===g.id);
     const el=document.createElement("div");el.className="gdir";
     el.innerHTML=`<div class="row" style="gap:11px;"><div class="ava">${g.emoji}</div>
-      <div><div style="font-weight:700;">${g.name}</div>
-      <div style="margin-top:4px;"><span class="tag">⏰${g.time}</span><span class="tag">${g.region}</span><span class="tag">${g.age}</span></div>
-      <div class="muted" style="font-size:11px;margin-top:4px;">${g.members}/10명 · 🔥${g.streak}일 · ${g.type==="cond"?"조건 서버":"자유 서버"}</div></div></div>
+      <div><div style="font-weight:700;">${g.name} ${g.password?"🔒":""}</div>
+      <div style="margin-top:4px;"><span class="tag">⏰${g.time}</span><span class="tag">${g.region}</span><span class="tag">${g.type==="cond"?g.age+" 전용":"자유"}</span></div>
+      <div class="muted" style="font-size:11px;margin-top:4px;">${g.members}/10명 · 🔥${g.streak}일</div></div></div>
       ${joined?`<button class="btn sm sec" style="opacity:.55;" disabled>가입됨</button>`:`<button class="btn sm" onclick="joinGuild('${g.id}')">가입</button>`}`;
     res.appendChild(el);
   });
-  if(!res.children.length)res.innerHTML='<div class="muted" style="text-align:center;padding:24px;">검색 결과가 없어요</div>';
+  const pg=document.getElementById("gPager");
+  pg.innerHTML=pages>1?`<button class="iconbtn" ${gPage===0?'style="opacity:.35"':""} onclick="if(gPage>0){gPage--;filterGuilds();}">◀</button>
+    <span class="muted" style="font-size:13px;font-weight:700;">${gPage+1} / ${pages}</span>
+    <button class="iconbtn" ${gPage>=pages-1?'style="opacity:.35"':""} onclick="if(gPage<${pages-1}){gPage++;filterGuilds();}">▶</button>`:"";
 }
 function joinGuild(id){
   if(S.guilds.some(x=>x.id===id)){toast("이미 가입한 길드예요");return;}
@@ -1146,6 +1258,7 @@ function recordVoice(){
   document.getElementById("ttsText").value="";
 }
 async function doRecord(){
+  if(S.customSounds.length>=10){toast("모닝콜은 최대 10개까지 만들 수 있어요");return;}
   if(!navigator.mediaDevices||!window.MediaRecorder){toast("녹음 미지원 브라우저예요. AI 텍스트를 써보세요");return;}
   const effect=document.querySelector("#vfx .opt.on")?.dataset.k||"none";
   if(effect!=="none" && !isPro()){showPro("음성 변조(고양이/강아지) 저장");return;}
@@ -1168,6 +1281,7 @@ async function doRecord(){
 function previewTts(){const t=val("ttsText").trim();if(!t){toast("텍스트를 입력하세요");return;}
   stopSound();if(!speakLoop(t))toast("이 브라우저는 음성 합성을 지원하지 않아요");setTimeout(stopSpeak,3500);}
 function makeTtsSound(){const t=val("ttsText").trim();if(!t){toast("텍스트를 입력하세요");return;}
+  if(S.customSounds.length>=10){toast("모닝콜은 최대 10개까지 만들 수 있어요");return;}
   if(!isPro() && S.customSounds.filter(s=>s.type==="tts").length>=1){showPro("AI 모닝콜 무제한");return;}
   const id="tts_"+uid();S.customSounds.push({id,name:"✨ AI: "+(t.length>12?t.slice(0,12)+"…":t),type:"tts",text:t});
   save();toast("AI 모닝콜을 만들었어요!");closeModal("voiceModal");renderSet();}
@@ -1188,7 +1302,9 @@ function renderRec(){
     <div class="sectitle">최근 7일</div>
     <div class="card"><div class="barwrap">${bars.map(b=>`<div class="b ${b.ok?"":"miss"}" style="height:${b.ok?100:14}%"><span>${DAYS[new Date(b.d).getDay()]}</span></div>`).join("")}</div>
     <div style="height:18px;"></div></div>
-    ${S.guilds.map(g=>guildRankCard(g)).join("")}
+    ${S.guilds.length?`<div class="sectitle">길드 랭킹</div>
+      <div class="chiprow" id="recGuildChips" style="margin-bottom:8px;"></div>
+      <div class="card" id="recGuildRank"></div>`:""}
     <div class="sectitle">N일 챌린지</div>
     <div class="card">
       <div class="row between"><b>7일 연속 기상</b><span class="muted">${Math.min(S.user.streak,7)}/7</span></div>
@@ -1197,13 +1313,21 @@ function renderRec(){
     </div>
     <div class="sectitle">기상 히스토리</div>
     <div class="card">${hist.length?hist.slice(0,12).map(h=>`<div class="mem"><div class="ava" style="background:linear-gradient(135deg,#28c98a,#0f5132);">☀️</div><div style="flex:1;"><b>${h.date}</b></div><span class="muted">${h.time} 기상</span></div>`).join(""):'<div class="muted" style="text-align:center;padding:18px;">아직 기록이 없어요. 알람을 테스트해보세요!</div>'}</div>`;
+  renderRecGuildRank();
 }
-function guildRankCard(g){
+let recGuildSel=0;
+function renderRecGuildRank(){
+  const chips=document.getElementById("recGuildChips");if(!chips)return;
+  if(recGuildSel>=S.guilds.length)recGuildSel=0;
+  chips.innerHTML="";
+  S.guilds.forEach((g,i)=>{const c=document.createElement("span");c.className="chip"+(i===recGuildSel?" on":"");
+    c.textContent=g.emoji+" "+g.name;c.onclick=()=>{recGuildSel=i;renderRecGuildRank();};chips.appendChild(c);});
+  const g=S.guilds[recGuildSel];const box=document.getElementById("recGuildRank");if(!box)return;
+  if(!g){box.innerHTML="";return;}
   const ms=g.members.slice().sort((a,b)=>b.streak-a.streak);
-  return `<div class="sectitle">${g.emoji} ${g.name} 랭킹</div><div class="card">${ms.map((m,i)=>
-    `<div class="mem"><div style="width:24px;font-weight:900;color:${i===0?"var(--amber)":"var(--sub)"};">${i+1}</div>
+  box.innerHTML=ms.map((m,i)=>`<div class="mem"><div style="width:24px;font-weight:900;color:${i===0?"var(--amber)":"var(--sub)"};">${i+1}</div>
     <div class="ava" style="background:${m.me?"linear-gradient(135deg,#3a5bff,#7b4bff)":"#333a63"};">${m.wokeToday?"😆":"😴"}</div>
-    <div style="flex:1;font-weight:${m.me?"800":"600"};">${m.name}${m.me?" (나)":""}</div><span class="muted">🔥${m.streak}일</span></div>`).join("")}</div>`;
+    <div style="flex:1;font-weight:${m.me?"800":"600"};">${m.name}${m.me?" (나)":""}</div><span class="muted">🔥${m.streak}일</span></div>`).join("");
 }
 
 /* ============ 설정 ============ */
@@ -1215,9 +1339,15 @@ function renderSet(){
         <div class="muted" style="font-size:12px;margin-top:3px;">${isPro()?"모든 잠금 해제됨":"다중 미션·꾸미기·음성변조·무제한 잠금 해제"}</div></div>
         <div class="sw ${isPro()?"on":""}" onclick="event.stopPropagation();togglePro()"></div></div>
     </div>
-    <div class="sectitle">알람음 마켓</div>
-    <div class="card" id="soundMarket"></div>
-    <button class="btn sec" onclick="recordVoice()" style="margin-top:4px;">🎙️ 음성 / AI 텍스트 모닝콜 만들기</button>
+    <div class="sectitle">🎙️ 나만의 모닝콜</div>
+    <div class="card" style="background:linear-gradient(135deg,#28306a,#1a1f44);text-align:center;">
+      <div style="font-size:34px;">🎙️✨</div>
+      <h2 style="font-size:18px;margin:8px 0 6px;">음성 · AI 텍스트 모닝콜 만들기</h2>
+      <div class="muted" style="font-size:13px;line-height:1.7;margin-bottom:16px;">친구를 깨우거나 내 알람음으로 쓸 수 있어요.<br>직접 <b style="color:#cdd6ff">녹음</b>(🐱고양이·🐶강아지 변조)하거나,<br><b style="color:#cdd6ff">텍스트만 입력</b>하면 AI가 또박또박 읽어줘요.</div>
+      <button class="btn" onclick="recordVoice()">＋ 모닝콜 만들기</button>
+    </div>
+    <div class="sectitle">내가 만든 모닝콜</div>
+    <div class="card" id="myCalls"></div>
     <div class="sectitle">계정</div>
     <div class="card">
       <div class="mem"><div class="ava">🙂</div><div style="flex:1;"><b>${S.user.name}</b><div class="muted" style="font-size:12px;">⭐ ${S.user.points}P · 🔥${S.user.streak}일</div></div></div>
@@ -1236,15 +1366,16 @@ function renderSet(){
       WAKE LEAGUE · 프로토타입 v0.1<br>
       ⚠️ 브라우저 알람은 앱(탭)이 열려 화면이 켜진 상태에서만 안정적으로 울려요.<br>홈 화면에 추가하면 앱처럼 쓸 수 있어요.
     </div>`;
-  const sm=document.getElementById("soundMarket");
-  allSounds().forEach(s=>{const el=document.createElement("div");el.className="mem";
-    const ic=s.type==="voice"?"🎙️":s.type==="tts"?"✨":"🎵";
-    const bg=s.type==="voice"?"linear-gradient(135deg,#ff6fae,#7b4bff)":s.type==="tts"?"linear-gradient(135deg,#28c98a,#3a5bff)":"linear-gradient(135deg,#3a5bff,#7b4bff)";
-    el.innerHTML=`<div class="ava" style="background:${bg};">${ic}</div>
-      <div style="flex:1;font-weight:600;">${s.name} ${s.pro&&!isPro()?'<span class="chip" style="border-color:#6b4bb0;color:#c9b6ff;">🔒 Pro</span>':''}</div>
-      <button class="btn sm sec" onclick="startSound('${s.id}');setTimeout(stopSound,3500);">▶</button>`;
-    sm.appendChild(el);});
+  const mc=document.getElementById("myCalls");const cs=S.customSounds;
+  if(!cs.length){mc.innerHTML='<div class="muted" style="text-align:center;padding:14px;font-size:13px;">아직 만든 모닝콜이 없어요. 위 버튼으로 만들어보세요!</div>';}
+  else cs.forEach(s=>{const ic=s.type==="tts"?"✨":"🎙️";const el=document.createElement("div");el.className="mem";
+    el.innerHTML=`<div class="ava" style="background:${s.type==="tts"?"linear-gradient(135deg,#28c98a,#3a5bff)":"linear-gradient(135deg,#ff6fae,#7b4bff)"};">${ic}</div>
+      <div style="flex:1;font-weight:600;">${s.name}</div>
+      <button class="btn sm sec" onclick="startSound('${s.id}');setTimeout(stopSound,3000);">▶</button>
+      <button class="iconbtn" style="margin-left:6px;width:36px;height:36px;font-size:15px;" onclick="delCall('${s.id}')">🗑️</button>`;
+    mc.appendChild(el);});
 }
+function delCall(id){S.customSounds=S.customSounds.filter(s=>s.id!==id);S.alarms.forEach(a=>{if(a.sound===id)a.sound="bell";});save();renderSet();toast("삭제했어요");}
 function resetAll(){if(confirm("모든 알람·기록·길드를 초기화할까요?")){localStorage.removeItem("wakeleague");S=load();renderHome();go("home");toast("초기화 완료");}}
 
 /* ===== 내 정보 · 인증 ===== */
@@ -1298,6 +1429,13 @@ function toast(m){const t=document.getElementById("toast");t.textContent=m;t.cla
 
 // 색상 변수 오타 방지용 보정
 document.documentElement.style.setProperty("--sub","#9aa3d0");
+
+// 키보드가 입력칸을 가리지 않도록 포커스 시 화면 안으로 스크롤
+document.addEventListener("focusin",(e)=>{const t=e.target;if(!t||!/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))return;
+  const ring=document.getElementById("ring");if(ring.classList.contains("show"))ring.classList.add("kbd");
+  setTimeout(()=>{try{t.scrollIntoView({block:"center",behavior:"smooth"});}catch(_){}},280);});
+document.addEventListener("focusout",()=>{setTimeout(()=>{const a=document.activeElement;
+  if(!a||!/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)){const ring=document.getElementById("ring");if(ring)ring.classList.remove("kbd");}},120);});
 
 renderHome();
 </script>
