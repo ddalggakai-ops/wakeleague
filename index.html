@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="version" content="4.0-clean">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>WAKE LEAGUE</title>
+<style>
+:root{
+  --bg:#FFFFFF;        /* app + post surface */
+  --bg2:#FAFAFA;       /* recessed / feed zone */
+  --zone:#F0F0F0;      /* thick zone separator band */
+  --line:#EFEFEF;      /* hairline divider */
+  --line2:#DBDBDB;     /* stronger border */
+  --ink:#0F1419;       /* primary text */
+  --tx:#0F1419;
+  --tx2:#3A3A3A;       /* body text */
+  --gray:#737373;      /* secondary */
+  --sub:#737373;
+  --gray2:#A8A8A8;     /* tertiary / timestamps */
+  --sub2:#A8A8A8;
+  --blue:#1877F2;      /* action / link */
+  --ac:#1877F2;
+  --green:#2BB673;     /* awake success */
+  --gn:#2BB673;
+  --amber:#946200;     /* tier text */
+  --amberB:#FFF4D6;    /* tier bg */
+  --red:#FF3040;       /* like / alert */
+  --rd:#FF3040;
+  --pk:#E1306C;        /* morning-call pink (insta) */
+  --ring:linear-gradient(45deg,#F9CE34 0%,#EE2A7B 50%,#6228D7 100%);
+  /* legacy tokens from v2.1 markup, remapped to the clean palette */
+  --cd:#FAFAFA;--cd2:#F0F0F0;--sf:#FFFFFF;--bd:#EFEFEF;--bd2:#DBDBDB;
+  --ac2:#1877F2;--acB:#EAF2FE;--acD:#D5E5FC;
+  --gnB:#E9F8F1;--gnD:#CDEFE0;--gd:#946200;--gdB:#FFF4D6;
+  --rdB:#FFEBED;--cy:#1877F2;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100vh;font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR','Segoe UI',sans-serif;
+  background:#0b0b0b;color:var(--ink);-webkit-font-smoothing:antialiased}
+body{display:flex;justify-content:center;padding:12px 0 24px}
+#A{width:100%;max-width:393px;min-height:852px;background:var(--bg);position:relative;overflow:hidden;
+  border-radius:44px;border:1px solid #000;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+
+/* status bar */
+.sb2{display:flex;justify-content:space-between;align-items:center;padding:14px 26px 0;font-size:12px;font-weight:600;color:var(--ink)}
+
+/* screens */
+.scr{display:none;flex-direction:column;height:calc(852px - 64px)}.scr.on{display:flex}
+.sa{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg2)}.sa::-webkit-scrollbar{display:none}
+@keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.scr.on .sa{animation:fu .3s cubic-bezier(.22,1,.36,1)}
+
+/* zone separator band — reusable */
+.gap{height:9px;background:var(--zone);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+
+/* bottom nav */
+.bn{position:absolute;bottom:0;left:0;right:0;height:64px;background:rgba(255,255,255,.94);backdrop-filter:blur(20px);
+  border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-around;padding-bottom:8px;z-index:50}
+.ni{display:flex;align-items:center;justify-content:center;cursor:pointer;padding:8px 14px;color:var(--gray2);position:relative}
+.ni.on{color:var(--ink)}
+.ni svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.8;transition:stroke-width .2s}
+.ni.on svg{stroke-width:2.4}
+.ni span{display:none}
+.ni .dot{position:absolute;top:5px;right:12px;width:8px;height:8px;border-radius:50%;background:var(--red);border:1.5px solid #fff}
+
+/* top bar */
+.tb{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;background:var(--bg);border-bottom:1px solid var(--line);flex-shrink:0}
+.logo{font-size:22px;font-weight:800;letter-spacing:-.6px}
+.logo em{font-style:normal;font-weight:400;color:var(--gray)}
+.ib{width:auto;height:auto;border:none;background:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);flex-shrink:0;margin-left:18px;border-radius:0}
+.ib svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8}
+.ib .dot,.dot{position:absolute}
+
+/* generic card */
+.c{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:15px;margin:0 12px 10px}
+.cac{border-color:var(--line);background:var(--bg)}
+.sl{font-size:13px;font-weight:800;letter-spacing:-.2px;color:var(--ink);margin:0;padding:14px 18px 9px;background:var(--bg2);text-transform:none}
+
+/* buttons */
+.btn{display:flex;align-items:center;justify-content:center;width:100%;padding:13px;border-radius:10px;font-size:15px;font-weight:700;border:none;cursor:pointer;letter-spacing:-.2px;transition:opacity .15s,transform .08s}
+.btn:active{transform:scale(.985)}
+.bp{background:var(--blue);color:#fff}
+.bp:active{opacity:.85}
+.bg2{background:var(--bg);color:var(--blue);border:1px solid var(--line2)}
+.bs{background:var(--bg2);color:var(--ink);border:1px solid var(--line2)}
+
+/* toggle */
+.tg{width:44px;height:26px;border-radius:13px;background:var(--line2);border:none;position:relative;cursor:pointer;transition:background .22s;flex-shrink:0}
+.tg.on{background:var(--green)}
+.tg::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .24s cubic-bezier(.34,1.4,.64,1);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.tg.on::after{transform:translateX(18px)}
+
+.row{display:flex;align-items:center;gap:8px}.bw{justify-content:space-between}.f1{flex:1}
+.dv{height:1px;background:var(--line);margin:0}
+
+/* tier label */
+.lb{display:inline-flex;align-items:center;gap:4px;background:var(--amberB);border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:var(--amber)}
+
+/* progress bar */
+.pb{height:6px;background:#ECECEC;border-radius:6px;overflow:hidden;margin-top:9px}
+.pfl{height:100%;border-radius:6px;background:var(--ink)}
+
+/* stories row — WAKE LEAGUE squircle cards with wake-time badge */
+.str{display:flex;gap:11px;overflow-x:auto;padding:14px 16px;background:var(--bg);-webkit-overflow-scrolling:touch}
+.str::-webkit-scrollbar{display:none}
+.st{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;flex-shrink:0;width:60px;transition:transform .1s}
+.st:active{transform:scale(.95)}
+/* unseen = solid ink frame, seen = light frame, mine = dashed */
+.sr2{width:60px;height:74px;border-radius:18px;padding:2.5px;background:var(--ink);position:relative}
+.sr2.seen{background:var(--line2)}
+.sr2.my{background:none;border:2px dashed var(--line2);padding:0}
+.si2{width:100%;height:100%;border-radius:15px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:28px;border:2.5px solid #fff;position:relative;overflow:hidden}
+.sr2.my .si2{border:none}
+/* wake-time badge bottom of card */
+.sr2 .wt{position:absolute;bottom:5px;left:50%;transform:translateX(-50%);background:rgba(15,20,25,.82);color:#fff;font-size:8.5px;font-weight:800;padding:1.5px 6px;border-radius:8px;white-space:nowrap;letter-spacing:-.2px;z-index:2}
+.sr2.my .wt{background:var(--green)}
+.sr2.seen .wt{background:rgba(15,20,25,.5)}
+.st span{font-size:11px;color:var(--ink);font-weight:500;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* feed post */
+.fi{display:flex;flex-direction:row;gap:11px;margin:0;padding:14px 16px;background:var(--bg);border-bottom:8px solid var(--bg2);align-items:flex-start}
+.av{width:42px;height:42px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 0 1px var(--line);background:var(--bg2)}
+.fi>.av{background:var(--bg2)!important;box-shadow:0 0 0 1px var(--line)!important}
+.fb2{flex:1;background:none;border:none;border-radius:0;padding:0;min-width:0}
+.fn2{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ft2{font-size:10px;font-weight:700;color:var(--gray);background:var(--bg2);border:1px solid var(--line);padding:1px 6px;border-radius:5px;margin-left:0}
+.fs2{font-size:11.5px;color:var(--gray2);margin-left:0;font-weight:500;display:block;width:100%;margin-top:2px}
+.fx2{font-size:14px;color:var(--ink);line-height:1.55;margin-top:9px}
+.mt2{font-size:11px;color:var(--green);background:#E9F8F1;border:none;padding:3px 9px;border-radius:7px;font-weight:700;display:inline-flex;align-items:center;gap:4px}
+.rcs{display:flex;gap:18px;margin-top:12px;flex-wrap:wrap;align-items:center}
+.rc{display:inline-flex;align-items:center;gap:5px;background:none;border:none;border-radius:0;padding:0;font-size:13px;cursor:pointer;color:var(--ink);font-weight:600}
+.rc.me{border:none;color:var(--red);background:none}
+
+/* received-notifications inbox stack */
+.inbox{background:var(--bg);border:1px solid var(--line);border-radius:14px;margin:0 12px 10px;overflow:hidden}
+.inbox .ih{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 10px}
+.inbox .ih b{font-size:13.5px;font-weight:800}
+.inbox .ih .cnt{font-size:11px;font-weight:800;color:#fff;background:var(--red);border-radius:20px;padding:1px 7px;min-width:18px;text-align:center}
+.inbox .ih a{font-size:12px;color:var(--gray);font-weight:600}
+.nrow{display:flex;align-items:center;gap:10px;padding:11px 14px;border-top:1px solid var(--line);cursor:pointer;transition:background .12s}
+.nrow:active{background:var(--bg2)}
+.nrow .nic{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.nrow .nic svg{width:18px;height:18px;fill:none;stroke-width:1.9}
+.nic.call{background:#FDECF3}.nic.call svg{stroke:var(--pk)}
+.nic.poke{background:#FFF1E6}.nic.poke svg{stroke:#F08A24}
+.nic.cheer{background:#FFEBED}.nic.cheer svg{stroke:var(--red);fill:var(--red)}
+.nrow .ntxt{flex:1;min-width:0}
+.nrow .ntxt b{font-size:13px;font-weight:700;color:var(--ink)}
+.nrow .ntxt .ns{font-size:11.5px;color:var(--gray);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nrow .nt{font-size:10.5px;color:var(--gray2);flex-shrink:0;font-weight:500}
+.nrow .nplay{width:30px;height:30px;border-radius:50%;background:var(--pk);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.nrow .nplay svg{width:13px;height:13px;fill:#fff;stroke:none}
+.nrow.callrow{flex-wrap:wrap}
+.nrow .callbody{width:100%;display:flex;align-items:center;gap:9px;margin-top:9px;padding-left:46px}
+
+/* wake chips */
+.wc{display:inline-flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:600;margin:0}
+.wd{width:7px;height:7px;border-radius:50%;display:inline-block}.wd.on{background:var(--green)}.wd.off{background:var(--line2)}
+
+/* alarm items */
+.ai{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:16px;margin:0 12px 10px;cursor:pointer;transition:transform .1s}
+.ai:active{transform:scale(.99)}
+.ai.ga{border-color:var(--line);background:var(--bg)}
+.ai .at{font-size:30px;font-weight:300;color:var(--ink);letter-spacing:-1px;font-variant-numeric:tabular-nums}
+.ai .aps{font-size:14px;color:var(--gray);font-weight:500;margin-right:4px}
+.ai .ainfo{font-size:12px;color:var(--gray);margin-top:3px}
+.ai .mp{display:inline-flex;align-items:center;gap:3px;background:var(--bg2);border:1px solid var(--line);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;color:var(--gray);margin-top:7px}
+
+/* guild card (discover) */
+.gc{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:13px;margin:0 12px 10px;cursor:pointer;display:flex;gap:12px;align-items:center}
+.gi{width:48px;height:48px;border-radius:14px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.gt3{font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;border:none;display:inline-block;margin-right:4px;margin-top:5px}
+.gt3.s{color:var(--green);background:#E9F8F1}
+.gt3.o{color:var(--gray);background:var(--bg2)}
+.gt3.h{color:var(--red);background:#FFEBED}
+.gt3.l{color:var(--amber);background:var(--amberB)}
+
+/* ranking rows */
+.mr{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--line)}.mr:last-child{border-bottom:none}
+.mr .rk{width:22px;text-align:center;font-size:14px;font-weight:700;color:var(--gray2)}.mr .rk.t{color:var(--ink)}
+.mst{font-size:11px;font-weight:700;padding:3px 9px;border-radius:7px}
+.mst.ok{background:#E9F8F1;color:var(--green)}.mst.sl{background:var(--bg2);color:var(--gray);cursor:pointer}
+.skr{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--line)}.skr:last-child{border-bottom:none}
+.skr .srk{width:24px;font-size:15px;font-weight:800;text-align:center}
+
+/* search */
+.searchbar{display:flex;align-items:center;gap:9px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:11px 14px;margin:12px;transition:border-color .2s}
+.searchbar:focus-within{border-color:var(--line2)}
+.searchbar svg{width:16px;height:16px;stroke:var(--gray);fill:none;stroke-width:2;flex-shrink:0}
+.searchbar input{background:none;border:none;color:var(--ink);font-size:14px;flex:1;outline:none;font-family:inherit}
+.searchbar input::placeholder{color:var(--gray2)}
+
+/* chips */
+.chs{display:flex;gap:6px;overflow-x:auto;padding:0 12px 12px;background:var(--bg2)}.chs::-webkit-scrollbar{display:none}
+.ch{flex-shrink:0;padding:7px 14px;border-radius:18px;font-size:12.5px;font-weight:600;border:1px solid var(--line2);color:var(--gray);background:var(--bg);cursor:pointer;white-space:nowrap;transition:all .15s}
+.ch.on{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:700}
+
+/* badge grid */
+.bgr{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;padding:0 12px}
+.bi{aspect-ratio:1;background:var(--bg);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:20px;cursor:pointer;transition:transform .12s}
+.bi:active{transform:scale(.94)}
+.bi.e{border-color:var(--line2);background:var(--bg)}
+.bi:not(.e){opacity:.55}
+.bi .bn2{font-size:8px;color:var(--gray);font-weight:600;text-align:center;line-height:1.1}
+
+/* calendar */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal .dayh{font-size:10px;color:var(--gray2);padding:5px 0;font-weight:600}
+.cal .dayn{font-size:11px;font-weight:600;padding:7px 2px;border-radius:9px;cursor:pointer;aspect-ratio:1;display:flex;align-items:center;justify-content:center}
+.cal .dayn.woke{background:#E9F8F1;color:var(--green);font-weight:700}
+.cal .dayn.today{background:var(--ink);color:#fff;font-weight:700}
+.cal .dayn.miss{color:var(--red);background:#FFEBED}
+.cal .dayn.future{color:var(--gray2);opacity:.5}
+
+/* ad card */
+.adc{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:14px;margin:0 12px 10px;position:relative}
+.adc .adl{position:absolute;top:10px;right:12px;font-size:9px;color:var(--gray2);font-weight:700;letter-spacing:.5px;border:1px solid var(--line);padding:1px 5px;border-radius:4px}
+
+/* streak share hero */
+.shc{background:linear-gradient(135deg,#FF8A5B,#EE2A7B 60%,#6228D7);border-radius:18px;padding:20px;position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;margin:0 12px 10px;box-shadow:0 8px 24px rgba(238,42,123,.25)}
+.shc::before{content:'';position:absolute;top:-30px;right:-20px;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.3),transparent 70%)}
+.shc>*{position:relative;z-index:1}
+
+/* morning call waveform */
+.mcw{display:flex;align-items:center;gap:2px;height:22px}.mcw .bar{width:3px;border-radius:2px;background:var(--pk);opacity:.5}
+
+/* modal */
+.mo{position:absolute;inset:0;z-index:150;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center}
+.mo.on{display:flex;animation:moFade .22s ease}
+@keyframes moFade{from{opacity:0}to{opacity:1}}
+@keyframes msUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.ms{width:100%;background:var(--bg);border-radius:20px 20px 0 0;padding:8px 16px 36px;border:none;max-height:82%;overflow-y:auto;animation:msUp .3s cubic-bezier(.22,1,.36,1)}
+.ms::-webkit-scrollbar{display:none}
+.ms .handle{width:38px;height:5px;border-radius:3px;background:var(--line2);margin:0 auto 18px}
+
+/* story viewer */
+.stv{position:absolute;inset:0;z-index:200;background:#000;display:none;flex-direction:column;color:#fff}
+.stv .sthead div{color:#fff}
+.stv .sttext #stMsg{color:#fff}
+.stv .sttext #stMission{color:rgba(255,255,255,.75)!important}
+.stv.on{display:flex}
+.stv .prog{display:flex;gap:3px;padding:12px 12px 8px}
+.stv .progbar{flex:1;height:2.5px;background:rgba(255,255,255,.3);border-radius:2px;overflow:hidden}
+.stv .progbar .progfill{height:100%;background:#fff;width:0%;transition:width 3s linear}
+.stv .sthead{display:flex;align-items:center;gap:9px;padding:0 12px 10px}
+.stv .stbody{flex:1;display:flex;align-items:center;justify-content:center;font-size:48px;position:relative}
+.stv .sttext{position:absolute;bottom:90px;left:16px;right:16px;text-align:center}
+
+/* alarm ring */
+.ring{position:absolute;inset:0;z-index:250;display:none;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;
+  background:linear-gradient(180deg,#FFFFFF 0%,#FFF0E6 55%,#FFD9B8 100%);color:var(--ink)}
+.ring.on{display:flex}
+@keyframes ringAnim{0%{transform:rotate(-14deg)}100%{transform:rotate(14deg)}}
+.ring .bell{font-size:62px;animation:ringAnim .35s ease infinite alternate}
+.mission{background:var(--bg);border:1px solid var(--line);border-radius:18px;padding:20px;width:100%;max-width:320px;margin-top:20px;box-shadow:0 8px 30px rgba(0,0,0,.08)}
+.mission .mq{font-size:30px;font-weight:800;text-align:center;margin:12px 0;letter-spacing:1px;color:var(--ink)}
+.mission input{width:100%;padding:14px;border-radius:12px;background:var(--bg2);border:1px solid var(--line2);color:var(--ink);font-size:24px;text-align:center;font-weight:700;outline:none;font-family:inherit}
+.mission input:focus{border-color:var(--blue)}
+.mission .mresult{text-align:center;margin-top:10px;font-size:13px;font-weight:700;min-height:20px}
+
+/* toast */
+#toast{position:absolute;bottom:80px;left:50%;transform:translateX(-50%) translateY(16px);background:rgba(15,20,25,.95);border:none;border-radius:10px;padding:12px 18px;font-size:13px;font-weight:600;color:#fff;white-space:nowrap;opacity:0;transition:all .26s cubic-bezier(.22,1,.36,1);z-index:300;pointer-events:none;max-width:90%;overflow:hidden;text-overflow:ellipsis;box-shadow:0 8px 28px rgba(0,0,0,.3)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* pro feature list */
+.pfl2{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.pf2{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink)}
+.pf2 .pd{color:var(--green);font-weight:800}
+
+/* mood chips */
+.mood-chip{padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600;border:1px solid var(--line2);color:var(--gray);background:var(--bg);cursor:pointer;display:inline-block;margin:0}
+.mood-chip.on{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:700}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div id="A">
+<div class="sb2"><span id="clockDisplay">6:47</span><div style="display:flex;gap:5px;font-size:11px">●●●● WiFi 🔋</div></div>
+
+<section class="scr on" id="s-feed">
+<div class="tb">
+  <div class="logo">WAKE <em>LEAGUE</em></div>
+  <div style="display:flex;gap:6px">
+    <div class="ib" onclick="openM('mSchool')"><svg viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg></div>
+    <div class="ib" style="position:relative" onclick="openM('mNotif')"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><div class="dot"></div></div>
+  </div>
+</div>
+<div class="sa">
+
+<div style="display:flex;align-items:center;gap:8px;background:var(--gnB);border:1px solid var(--gnD);border-radius:10px;padding:8px 12px;margin-bottom:12px;cursor:pointer" onclick="openM('mPostLive')">
+  <div style="width:7px;height:7px;border-radius:50%;background:var(--gn);animation:pulse 2s infinite;flex-shrink:0"></div>
+  <div class="f1"><div style="font-size:12px;font-weight:700;color:var(--gn)">모닝 라이브 ON</div><div style="font-size:10px;color:var(--sub);margin-top:1px">오전 9시에 닫혀요 · 2시간 13분 남음</div></div>
+  <div style="background:var(--gn);color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:7px;flex-shrink:0">+ 올리기</div>
+</div>
+
+<div class="str" id="storyRow"></div>
+
+<div class="c cac" style="padding:12px 14px">
+  <div class="row bw" style="margin-bottom:6px">
+    <div style="font-size:13px;font-weight:800;color:var(--tx)">🛡️ 연세대 경영 스터디</div>
+    <div class="lb" style="font-size:10px">🥈 실버 II</div>
+  </div>
+  <div style="font-size:12px;color:var(--sub);margin-bottom:6px"><span style="color:var(--gn);font-weight:800">5</span>/7명 기상 · 오늘 +50점 · 리그 2위</div>
+  <div style="display:flex;flex-wrap:wrap;gap:4px" id="wakeChips"></div>
+</div>
+
+<div class="inbox" id="mcReceived">
+  <div class="ih">
+    <b>받은 알림</b>
+    <div class="row" style="gap:8px"><span class="cnt">5</span><a onclick="openM('mNotif')">전체</a></div>
+  </div>
+
+  <div class="nrow callrow">
+    <div class="nic call"><svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4"/></svg></div>
+    <div class="ntxt"><b>지수 선배</b><div class="ns">🎙 모닝콜 · "현진아 오늘도 화이팅!"</div></div>
+    <span class="nt">방금</span>
+    <div class="callbody" onclick="playMC()">
+      <div id="mcPlayBtn" class="nplay"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+      <div class="mcw" id="mcWave"></div>
+      <span style="font-size:11px;color:var(--sub)" id="mcTime">0:08</span>
+    </div>
+  </div>
+
+  <div class="nrow" onclick="toast('🎙 민지님의 모닝콜을 재생합니다')">
+    <div class="nic call"><svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4"/></svg></div>
+    <div class="ntxt"><b>민지</b><div class="ns">🎙 모닝콜이 도착했어요 · 0:06</div></div>
+    <span class="nt">2분 전</span>
+  </div>
+
+  <div class="nrow" onclick="toast('👉 태양님에게 콕! 답장했어요')">
+    <div class="nic poke"><svg viewBox="0 0 24 24"><path d="M9 11V6a2 2 0 0 1 4 0v5M9 11l-1.5 1.5a2 2 0 0 0 0 3L11 19a4 4 0 0 0 3-1.2l3-3a2 2 0 0 0-2.8-2.8L13 13"/></svg></div>
+    <div class="ntxt"><b>태양님이 콕 찔렀어요</b><div class="ns">"빨리 일어나~" · 콕 3개 받음</div></div>
+    <span class="nt">5분 전</span>
+  </div>
+
+  <div class="nrow" onclick="toast('❤️ 받은 응원을 확인했어요')">
+    <div class="nic cheer"><svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 1 0-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></div>
+    <div class="ntxt"><b>지수님 외 6명이 응원했어요</b><div class="ns">오늘 기상 게시물에 🔥 응원</div></div>
+    <span class="nt">8분 전</span>
+  </div>
+</div>
+
+<div class="sl">모닝 라이브</div>
+<div id="feedList"></div>
+
+<div class="adc">
+  <div class="adl">AD</div>
+  <div class="row" style="gap:10px">
+    <div style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#1A2F50,#0F1835);display:flex;align-items:center;justify-content:center;font-size:18px">📖</div>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:var(--tx)">메가스터디 수능 D-127 특강</div>
+      <div style="font-size:11px;color:var(--sub);margin-top:2px">지금 가입하면 첫 달 무료</div>
+      <div style="margin-top:4px;display:inline-block;font-size:11px;font-weight:700;color:var(--ac2);background:var(--acB);padding:3px 10px;border-radius:6px;cursor:pointer" onclick="toast('광고 페이지로 이동')">자세히 보기 →</div>
+    </div>
+  </div>
+</div>
+
+<div style="height:20px"></div>
+</div>
+</section>
+
+<section class="scr" id="s-alarm">
+<div class="tb"><div class="logo">알람</div><div class="ib" onclick="openM('mAlarmAdd')"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div></div>
+<div class="sa">
+<div style="background:radial-gradient(120% 90% at 50% 0%,rgba(255,138,91,.14),rgba(108,92,255,.08) 55%,transparent);border-radius:var(--r-xl);padding:26px 20px;text-align:center;margin-bottom:14px;border:1px solid var(--sunD)">
+  <div style="font-size:11px;color:var(--sub);font-weight:700;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase">다음 알람</div>
+  <div style="font-size:56px;font-weight:900;letter-spacing:-3px;font-variant-numeric:tabular-nums"><span style="font-size:16px;font-weight:700;color:var(--sun);margin-right:5px;vertical-align:super">AM</span>6:30</div>
+  <div style="font-size:12.5px;color:var(--sub);margin-top:6px">내일 월요일 · <span style="color:var(--gn);font-weight:700">8시간 47분</span> 후</div>
+  <div class="row" style="justify-content:center;gap:6px;margin-top:12px">
+    <div style="background:var(--acB);border:1px solid var(--acD);border-radius:8px;padding:4px 10px;font-size:10.5px;font-weight:700;color:var(--ac2)">📐 수학 3문제</div>
+    <div style="background:var(--gnB);border:1px solid var(--gnD);border-radius:8px;padding:4px 10px;font-size:10.5px;font-weight:700;color:var(--gn)">🛡️ 파티 알람</div>
+  </div>
+  <button class="btn bs" style="margin-top:14px;padding:10px;font-size:12px" onclick="showRing()">⏰ 알람 울림 체험하기</button>
+</div>
+<div class="sl">내 알람</div>
+<div id="alarmList"></div>
+<button class="btn bg2" style="margin-top:8px;font-size:13px" onclick="openM('mAlarmAdd')">+ 새 알람 추가</button>
+<div class="dv"></div>
+<div class="sl">🎙️ 모닝콜 보내기</div>
+<div class="c" style="text-align:center">
+  <div style="font-size:32px;margin-bottom:8px">🎙️</div>
+  <div style="font-size:14px;font-weight:700;margin-bottom:4px">파티원에게 음성 보내기</div>
+  <div style="font-size:12px;color:var(--sub);margin-bottom:12px;line-height:1.5">내일 아침 알람과 함께 내 목소리가<br>파티 친구들을 깨워요</div>
+  <button class="btn bp" style="font-size:13px" onclick="openM('mRecord')">🎙️ 녹음 시작</button>
+</div>
+</div>
+</section>
+
+<section class="scr" id="s-guild">
+<div class="tb"><div class="logo">내 파티</div><div class="ib" onclick="openM('mInvite')"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></div></div>
+<div class="sa">
+<div class="c cac">
+  <div class="row" style="gap:10px;margin-bottom:10px">
+    <div style="font-size:32px">🛡️</div>
+    <div class="f1">
+      <div style="font-size:16px;font-weight:800">연세대 경영 스터디</div>
+      <div class="row" style="gap:5px;margin-top:3px"><div class="lb">🥈 실버 II</div><div style="font-size:10px;color:var(--sub)">7명 · 상위 38%</div></div>
+    </div>
+  </div>
+  <div class="row bw" style="font-size:11px;color:var(--sub);margin-bottom:4px"><span>이번 주 점수</span><span style="color:var(--ac2);font-weight:700">320 / 490 (골드 승급)</span></div>
+  <div class="pb"><div class="pfl" style="width:65%"></div></div>
+  <div class="row bw" style="font-size:9.5px;color:var(--sub2);margin-top:4px"><span>▼ 강등 200</span><span>▲ 골드 490</span></div>
+</div>
+<div class="sl">이번 주 기상 랭킹</div>
+<div class="c" id="memberList"></div>
+<div class="sl">리그 현황</div>
+<div class="c" id="leagueList"></div>
+<button class="btn bg2" style="margin-top:8px;font-size:13px" onclick="openM('mInvite')">🤝 친구 초대하기</button>
+</div>
+</section>
+
+<section class="scr" id="s-discover">
+<div class="tb"><div class="logo">탐색</div></div>
+<div class="sa">
+<div class="searchbar"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input placeholder="학교, 동아리, 목표로 검색" id="searchInput" oninput="filterGuilds()"></div>
+<div class="chs" id="chipRow"></div>
+<div class="sl">🏫 학교별 랭킹</div>
+<div class="c" style="border-color:rgba(245,183,49,.2);background:linear-gradient(135deg,rgba(245,183,49,.06),var(--cd))">
+  <div style="font-size:11px;color:var(--gd);font-weight:700;margin-bottom:8px">이번 주 전국 학교 순위</div>
+  <div id="schoolRankSmall"></div>
+  <button class="btn bg2" style="margin-top:8px;padding:8px;font-size:11px" onclick="openM('mSchool')">전체 순위 보기 →</button>
+</div>
+<div class="sl">🔥 파티 찾기</div>
+<div id="guildSearchList"></div>
+<button class="btn bp" style="margin-top:8px;font-size:13px" onclick="openM('mNewGuild')">+ 새 파티 만들기</button>
+<div style="height:20px"></div>
+</div>
+</section>
+
+<section class="scr" id="s-profile">
+<div class="tb"><div class="logo">프로필</div><div class="ib" onclick="openM('mSettings')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09"/></svg></div></div>
+<div class="sa">
+<div style="text-align:center;padding:16px 16px 12px">
+  <div style="width:68px;height:68px;border-radius:20px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(135deg,var(--ac),var(--cy));position:relative">🧒<div style="position:absolute;bottom:-3px;right:-3px;background:var(--ac);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:5px;border:2px solid var(--bg)">Lv.12</div></div>
+  <div style="font-size:19px;font-weight:800">현진</div>
+  <div style="font-size:12px;color:var(--sub);margin-top:3px">연세대학교 23학번 · 경영학과</div>
+  <div class="row" style="justify-content:center;gap:28px;margin-top:14px">
+    <div style="text-align:center"><div style="font-size:20px;font-weight:800;color:var(--gn)">42</div><div style="font-size:10px;color:var(--sub);margin-top:2px">연속 기상</div></div>
+    <div style="text-align:center"><div style="font-size:20px;font-weight:800">🥈</div><div style="font-size:10px;color:var(--sub);margin-top:2px">실버 II</div></div>
+    <div style="text-align:center"><div style="font-size:20px;font-weight:800">89</div><div style="font-size:10px;color:var(--sub);margin-top:2px">총 기상</div></div>
+    <div style="text-align:center"><div style="font-size:20px;font-weight:800;color:var(--gd)">1,240</div><div style="font-size:10px;color:var(--sub);margin-top:2px">포인트</div></div>
+  </div>
+</div>
+<div class="dv"></div>
+<div class="sl">🎯 목표</div>
+<div class="c cac row bw">
+  <div><div style="font-size:11px;color:var(--sub);margin-bottom:2px">수능까지</div><div style="font-size:26px;font-weight:900">D-<span style="color:var(--ac2)">127</span></div></div>
+  <div style="text-align:right"><div style="font-size:10px;color:var(--sub)">기상 달성률</div><div style="font-size:20px;font-weight:800;color:var(--gn)">94%</div></div>
+</div>
+
+<div class="sl">🔥 42일 연속 기상 기록</div>
+<div class="shc">
+  <div style="font-size:42px">🔥</div>
+  <div style="flex:1">
+    <div style="font-size:24px;font-weight:900;letter-spacing:-1px;color:#fff"><span style="text-shadow:0 1px 8px rgba(0,0,0,.3)">42일</span> 연속</div>
+    <div style="font-size:12px;color:rgba(255,255,255,.85);margin-top:3px">매일 AM 6:30 · 실버 II</div>
+    <div style="font-size:10px;color:rgba(255,255,255,.7);margin-top:5px;font-weight:800;letter-spacing:.8px">WAKE LEAGUE</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:7px">
+    <div style="width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="toast('스토리로 공유했어요')"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg></div>
+    <div style="width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="toast('메시지로 공유했어요')"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-9 8.4 9 9 0 0 1-4-1L3 20l1.1-4A8.38 8.38 0 1 1 21 11.5z"/></svg></div>
+    <div style="width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="toast('이미지를 저장했어요')"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+  </div>
+</div>
+
+<div class="sl">🏅 배지 <span style="font-size:9px;color:var(--sub);letter-spacing:0">5/11</span></div>
+<div class="bgr" id="badgeGrid"></div>
+<div class="sl">📅 6월 기상 기록</div>
+<div class="c" id="calCard"></div>
+<div class="dv"></div>
+<div class="c" style="border-color:rgba(48,212,192,.2);background:linear-gradient(135deg,rgba(48,212,192,.06),var(--cd));text-align:center">
+  <div style="font-size:24px;margin-bottom:6px">🤝</div>
+  <div style="font-size:15px;font-weight:800">친구 초대하면 둘 다 보상!</div>
+  <div style="font-size:12px;color:var(--sub);margin-top:4px;line-height:1.5">초대 친구가 3일 연속 기상하면<br>둘 다 ❄️ 면제권 + ⭐ 200P</div>
+  <div style="font-size:24px;font-weight:900;letter-spacing:4px;color:var(--cy);margin:10px 0;font-family:monospace">WK-HJ42</div>
+  <button class="btn bp" style="font-size:13px" onclick="copyCode()">초대 링크 복사하기</button>
+</div>
+<div class="c" style="border-color:rgba(245,183,49,.2);background:linear-gradient(135deg,rgba(108,92,255,.08),rgba(245,183,49,.05),var(--cd));cursor:pointer" onclick="openM('mPro')">
+  <div style="display:inline-flex;align-items:center;gap:3px;background:linear-gradient(135deg,var(--gd),#E8A020);color:#1A1000;font-size:10px;font-weight:800;padding:3px 9px;border-radius:6px;margin-bottom:8px">✨ PRO</div>
+  <div style="font-size:15px;font-weight:800;margin-bottom:3px">WAKE LEAGUE Pro</div>
+  <div style="font-size:12px;color:var(--sub);line-height:1.5">광고 제거 · 무제한 파티 · AI 모닝콜 · 수면 분석</div>
+  <div style="text-align:center;margin-top:10px"><span style="font-size:20px;font-weight:900;color:var(--gd)">월 3,900원</span><span style="font-size:12px;color:var(--sub);margin-left:4px">(첫 달 무료)</span></div>
+</div>
+<div style="height:20px"></div>
+</div>
+</section>
+
+<nav class="bn">
+  <div class="ni on" id="n-feed" onclick="go('s-feed')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>피드</span></div>
+  <div class="ni" id="n-alarm" onclick="go('s-alarm')"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3L2 6M22 6l-3-3"/></svg><span>알람</span></div>
+  <div class="ni" id="n-guild" onclick="go('s-guild')"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>파티</span></div>
+  <div class="ni" id="n-discover" onclick="go('s-discover')"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>탐색</span></div>
+  <div class="ni" id="n-profile" onclick="go('s-profile')"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>프로필</span></div>
+</nav>
+
+<div class="stv" id="storyViewer">
+  <div class="prog" id="storyProg"></div>
+  <div class="sthead">
+    <div style="width:32px;height:32px;border-radius:10px;background:var(--cd2);display:flex;align-items:center;justify-content:center;font-size:14px" id="stAvatar"></div>
+    <div><div style="font-size:13px;font-weight:700" id="stName"></div><div style="font-size:10px;color:var(--sub)" id="stTime"></div></div>
+    <div style="margin-left:auto;cursor:pointer;padding:8px;font-size:18px" onclick="closeStory()">✕</div>
+  </div>
+  <div class="stbody" id="stBody" onclick="nextStorySlide()">
+    <div style="font-size:64px" id="stEmoji"></div>
+    <div class="sttext"><div style="font-size:16px;font-weight:700;margin-bottom:4px" id="stMsg"></div><div style="font-size:12px;color:var(--sub)" id="stMission"></div></div>
+  </div>
+  <div style="padding:12px;display:flex;gap:6px">
+    <input style="flex:1;padding:10px 14px;border-radius:20px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:13px;outline:none;font-family:inherit" placeholder="응원 보내기..." id="stReply">
+    <button style="background:var(--ac);border:none;border-radius:20px;padding:10px 16px;color:#fff;font-weight:700;font-size:13px;cursor:pointer" onclick="sendStoryReply()">보내기</button>
+  </div>
+</div>
+
+<div class="ring" id="ringScreen">
+  <div class="bell">⏰</div>
+  <div style="font-size:52px;font-weight:900;letter-spacing:-3px;margin-top:12px">AM 6:30</div>
+  <div style="font-size:13px;color:var(--ac2);background:var(--acB);padding:6px 14px;border-radius:10px;margin-top:10px;font-weight:700">🛡️ 연세대 경영 스터디</div>
+  <div style="font-size:14px;color:var(--sub);margin-top:12px;line-height:1.6">지수 선배가 모닝콜을 보냈어요 🎙️</div>
+  <div class="mission">
+    <div style="font-size:12px;color:var(--sub);text-align:center">📐 수학 문제를 풀어서 알람을 끄세요</div>
+    <div style="font-size:11px;color:var(--ac2);text-align:center;margin-top:4px" id="missionCount">1 / 3</div>
+    <div class="mq" id="missionQ"></div>
+    <input type="number" id="missionInput" placeholder="정답 입력" oninput="checkAnswer()">
+    <div class="mresult" id="missionResult"></div>
+  </div>
+  <button class="btn bs" style="margin-top:16px;padding:10px;font-size:12px;width:auto;padding-left:24px;padding-right:24px" onclick="closeRing()">데모 닫기</button>
+</div>
+
+<div class="mo" id="mAlarmAdd" onclick="closeMBg(event,'mAlarmAdd')"><div class="ms" onclick="event.stopPropagation()">
+  <div class="handle"></div>
+  <div style="font-size:18px;font-weight:800;margin-bottom:14px">알람 추가</div>
+  <div style="text-align:center;margin-bottom:16px">
+    <div class="row" style="justify-content:center;gap:4px">
+      <select id="newH" style="background:var(--cd2);border:1px solid var(--bd2);border-radius:12px;color:var(--tx);font-size:32px;font-weight:800;padding:8px 12px;font-family:inherit;outline:none"></select>
+      <span style="font-size:32px;font-weight:800">:</span>
+      <select id="newM" style="background:var(--cd2);border:1px solid var(--bd2);border-radius:12px;color:var(--tx);font-size:32px;font-weight:800;padding:8px 12px;font-family:inherit;outline:none"></select>
+    </div>
+  </div>
+  <div style="font-size:13px;font-weight:700;margin-bottom:6px;color:var(--tx)">반복</div>
+  <div class="row" style="gap:4px;margin-bottom:14px" id="dayPicker"></div>
+  <div style="font-size:13px;font-weight:700;margin-bottom:6px;color:var(--tx)">기상 미션</div>
+  <div id="missionPicker" style="margin-bottom:14px"></div>
+  <div style="font-size:13px;font-weight:700;margin-bottom:6px;color:var(--tx)">알람 이름</div>
+  <input id="newLabel" placeholder="예: 아침 공부" style="width:100%;padding:11px 14px;border-radius:12px;background:var(--cd2);border:1px solid var(--bd2);color:var(--tx);font-size:14px;outline:none;font-family:inherit;margin-bottom:16px">
+  <button class="btn bp" onclick="addAlarm()">알람 저장</button>
+</div></div>
+
+<div class="mo" id="mRecord" onclick="closeMBg(event,'mRecord')"><div class="ms" onclick="event.stopPropagation()">
+  <div class="handle"></div>
+  <div style="text-align:center">
+    <div style="font-size:36px;margin-bottom:8px">🎙️</div>
+    <div style="font-size:18px;font-weight:800;margin-bottom:4px">모닝콜 녹음</div>
+    <div style="font-size:12px;color:var(--sub);margin-bottom:20px;line-height:1.5">내일 아침 파티원의 알람과 함께 재생돼요<br>10초 이내로 짧게 녹음해주세요</div>
+    <div id="recBtn" style="width:72px;height:72px;border-radius:50%;background:var(--rd);margin:0 auto;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:28px;transition:all .2s" onclick="toggleRec()">🎙️</div>
+    <div style="font-size:24px;font-weight:800;margin-top:12px;font-variant-numeric:tabular-nums" id="recTimer">00:00</div>
+    <div style="font-size:12px;color:var(--sub);margin-top:4px" id="recStatus">탭해서 녹음 시작</div>
+    <div id="recDone" style="display:none;margin-top:16px"><button class="btn bp" onclick="saveRec()">모닝콜 보내기</button></div>
+  </div>
+</div></div>
+
+<div class="mo" id="mInvite" onclick="closeMBg(event,'mInvite')"><div class="ms" onclick="event.stopPropagation()">
+  <div class="handle"></div>
+  <div style="text-align:center">
+    <div style="font-size:32px;margin-bottom:8px">🤝</div>
+    <div style="font-size:18px;font-weight:800;margin-bottom:4px">친구 초대하기</div>
+    <div style="font-size:12px;color:var(--sub);line-height:1.6">초대한 친구가 3일 연속 기상하면<br>둘 다 ❄️ 면제권 1회 + ⭐ 200P</div>
+    <div style="font-size:24px;font-weight:900;letter-spacing:4px;color:var(--cy);margin:14px 0;font-family:monospace">WK-HJ42</div>
+    <button class="btn bp" style="font-size:14px;margin-bottom:8px" onclick="copyCode()">📤 초대 링크 복사</button>
+    <button class="btn bg2" style="font-size:13px" onclick="closeM('mInvite');toast('💬 카톡으로 초대 전송!')">💬 카카오톡으로 보내기</button>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--bd)">
+      <div style="font-size:11px;color:var(--sub);margin-bottom:6px">나의 초대 현황</div>
+      <div class="row" style="justify-content:center;gap:20px">
+        <div style="text-align:center"><div style="font-size:18px;font-weight:800">3명</div><div style="font-size:10px;color:var(--sub)">초대 완료</div></div>
+        <div style="text-align:center"><div style="font-size:18px;font-weight:800;color:var(--gd)">600P</div><div style="font-size:10px;color:var(--sub)">획득</div></div>
+        <div style="text-align:center"><div style="font-size:18px;font-weight:800;color:var(--cy)">2명</div><div style="font-size:10px;color:var(--sub)">다음 보상</div></div>
+      </div>
+    </div>
+  </div>
+</div></div>
+
+<div class="mo" id="mSchool" onclick="closeMBg(event,'mSchool')"><div class="ms" onclick="event.stopPropagation()">
+  <div class="handle"></div>
+  <div style="font-size:18px;font-weight:800;margin-bottom:4px">🏫 전국 학교 랭킹</div>
+  <div style="font-size:12px;color:var(--sub);margin-bottom:14px">이번 주 기상 점수 · 매주 월요일 갱신</div>
+  <div id="schoolRankFull"></div>
+  <button class="btn bg2" style="margin-top:12px;font-size:12px" onclick="closeM('mSchool');toast('📤 학교 순위 공유됨!')">📤 학교 순위 공유하기</button>
+</div></div>
+
+<div class="mo" id="mPro" onclick="closeMBg(event,'mPro')"><div class="ms" onclick="event.stopPropagation()">
+  <div class="handle"></div>
+  <div style="text-align:center;margin-bottom:16px">
+    <div style="font-size:36px;margin-bottom:8px">✨</div>
+    <div style="font-size:20px;font-weight:900">WAKE LEAGUE Pro</div>
+    <div style="font-size:13px;color:var(--sub);margin-top:4px">첫 달 무료 체험</div>
+  </div>
+  <div class="pfl2" style="margin-bottom:16px">
+    <div class="pf2"><span class="pd">✓</span> 광고 완전 제거</div>
+    <div class="pf2"><span class="pd">✓</span> 파티 3개 → 무제한 가입</div>
+    <div class="pf2"><span class="pd">✓</span> AI 음성 모닝콜 무제한 생성</div>
+    <div class="pf2"><span class="pd">✓</span> 스마트 수면 분석 & 추천</div>
+    <div class="pf2"><span class="pd">✓</span> 프리미엄 알람음 30종+</div>
+    <div class="pf2"><span class="pd">✓</span> 커스텀 공유 카드 디자인</div>
+    <div class="pf2"><span class="pd">✓</span> 파티 상세 통계</div>
+  </div>
+  <div class="c" style="text-align:center;border-color:rgba(245,183,49,.2);background:var(--gdB)">
+    <div style="font-size:11px;color:var(--sub)">월간 구독</div>
+    <div style="font-size:28px;font-weight:900;color:var(--gd);margin:4px 0">₩3,900<span style="font-size:13px;color:var(--sub);font-weight:600">/월</span></div>
+    <div style="font-size:11px;color:var(--gn);font-weight:700">첫 달 무료 · 언제든 해지</div>
+  </div>
+  <button class="btn bp" style="font-size:15px" onclick="closeM('mPro');toast('✨ Pro 체험 시작!')">무료로 시작하기</button>
+</div></div>
+
+<div class="mo" id="mNotif" onclick="closeMBg(event,'mNotif')"><div class="ms" onclick="event.stopPropagation()">
+  <div class="handle"></div>
+  <div style="font-size:16px;font-weight:800;margin-bottom:12px">알림</div>
+  <div id="notifList"></div>
+</div></div>
+
+<div class="mo" id="mNewGuild" onclick="closeMBg(event,'mNewGuild')"><div class="ms" onclick="event.stopPropagation()">
+  <div class="handle"></div>
+  <div style="font-size:18px;font-weight:800;margin-bottom:14px">새 파티 만들기</div>
+  <div style="font-size:13px;font-weight:700;margin-bottom:6px">파티 이름</div>
+  <input placeholder="예: 우리 과 아침 스터디" style="width:100%;padding:11px 14px;border-radius:12px;background:var(--cd2);border:1px solid var(--bd2);color:var(--tx);font-size:14px;outline:none;font-family:inherit;margin-bottom:12px">
+  <div style="font-size:13px;font-weight:700;margin-bottom:6px">기상 시간</div>
+  <select style="width:100%;background:var(--cd2);border:1px solid var(--bd2);border-radius:10px;color:var(--tx);font-size:16px;font-weight:700;padding:10px;font-family:inherit;outline:none;margin-bottom:12px"><option>AM 5:00</option><option>AM 5:30</option><option>AM 6:00</option><option selected>AM 6:30</option><option>AM 7:00</option><option>AM 7:30</option><option>AM 8:00</option></select>
+  <div style="font-size:13px;font-weight:700;margin-bottom:6px">가입 조건</div>
+  <div class="row" style="gap:6px;margin-bottom:14px">
+    <div class="ch on" onclick="this.classList.toggle('on')">자유 가입</div>
+    <div class="ch" onclick="this.classList.toggle('on')">초대코드</div>
+    <div class="ch" onclick="this.classList.toggle('on')">학교 인증</div>
+  </div>
+  <button class="btn bp" onclick="closeM('mNewGuild');toast('🛡️ 파티가 생성되었어요!')">파티 만들기</button>
+</div></div>
+
+<div class="mo" id="mJoinGuild" onclick="closeMBg(event,'mJoinGuild')"><div class="ms" onclick="event.stopPropagation()">
+  <div class="handle"></div>
+  <div style="text-align:center">
+    <div style="font-size:36px;margin-bottom:8px" id="joinEmoji"></div>
+    <div style="font-size:18px;font-weight:800;margin-bottom:4px" id="joinName"></div>
+    <div style="font-size:12px;color:var(--sub);margin-bottom:12px" id="joinMeta"></div>
+    <button class="btn bp" style="margin-bottom:8px" onclick="closeM('mJoinGuild');toast('🎉 가입 완료! 파티 알람이 추가됐어요')">가입하기</button>
+    <button class="btn bg2" onclick="closeM('mJoinGuild')">취소</button>
+  </div>
+</div></div>
+
+<div class="mo" id="mSettings" onclick="closeMBg(event,'mSettings')"><div class="ms" onclick="event.stopPropagation()">
+  <div class="handle"></div>
+  <div style="font-size:18px;font-weight:800;margin-bottom:14px">설정</div>
+  <div class="c" style="padding:12px"><div class="row bw"><span style="font-size:14px;font-weight:600">알림 허용</span><div class="tg on" onclick="this.classList.toggle('on')"></div></div></div>
+  <div class="c" style="padding:12px"><div class="row bw"><span style="font-size:14px;font-weight:600">진동</span><div class="tg on" onclick="this.classList.toggle('on')"></div></div></div>
+  <div class="c" style="padding:12px"><div class="row bw"><span style="font-size:14px;font-weight:600">다크 모드</span><div class="tg on" onclick="this.classList.toggle('on')"></div></div></div>
+  <div class="c" style="padding:12px;cursor:pointer" onclick="toast('프로필 편집')"><div class="row bw"><span style="font-size:14px;font-weight:600">프로필 편집</span><span style="color:var(--sub)">›</span></div></div>
+  <div class="c" style="padding:12px;cursor:pointer" onclick="toast('학교 인증')"><div class="row bw"><span style="font-size:14px;font-weight:600">학교 인증</span><span style="color:var(--gn);font-size:12px;font-weight:700">인증됨 ✓</span></div></div>
+  <div class="c" style="padding:12px;cursor:pointer" onclick="toast('고객센터')"><div class="row bw"><span style="font-size:14px;font-weight:600">고객센터 / 문의</span><span style="color:var(--sub)">›</span></div></div>
+  <div class="c" style="padding:12px;cursor:pointer" onclick="toast('로그아웃')"><div class="row bw"><span style="font-size:14px;font-weight:600;color:var(--rd)">로그아웃</span><span></span></div></div>
+</div></div>
+
+<div class="mo" id="mBadge" onclick="closeMBg(event,'mBadge')"><div class="ms" onclick="event.stopPropagation()">
+  <div class="handle"></div>
+  <div style="text-align:center">
+    <div style="font-size:48px;margin-bottom:8px" id="bdEmoji"></div>
+    <div style="font-size:18px;font-weight:800;margin-bottom:4px" id="bdName"></div>
+    <div style="font-size:13px;color:var(--sub);margin-bottom:4px" id="bdDesc"></div>
+    <div style="font-size:12px;color:var(--gd);font-weight:700" id="bdBonus"></div>
+  </div>
+</div></div>
+
+<div class="mo" id="mPostLive" onclick="closeMBg(event,'mPostLive')"><div class="ms" onclick="event.stopPropagation()">
+  <div class="handle"></div>
+  <div style="font-size:18px;font-weight:800;margin-bottom:4px">🌅 내 라이브 올리기</div>
+  <div style="font-size:12px;color:var(--sub);margin-bottom:16px">오전 9시까지 파티원들에게 보여요</div>
+  <div style="font-size:13px;font-weight:700;margin-bottom:8px">지금 기분은?</div>
+  <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap" id="moodPicker">
+    <div class="mood-chip on" onclick="selectMood(this)">🌅 상쾌</div>
+    <div class="mood-chip" onclick="selectMood(this)">☕ 커피각</div>
+    <div class="mood-chip" onclick="selectMood(this)">😴 졸려</div>
+    <div class="mood-chip" onclick="selectMood(this)">🔥 의욕충만</div>
+    <div class="mood-chip" onclick="selectMood(this)">📚 공부시작</div>
+    <div class="mood-chip" onclick="selectMood(this)">🏃 운동완료</div>
+  </div>
+  <div style="font-size:13px;font-weight:700;margin-bottom:6px">오늘의 한 마디</div>
+  <textarea id="liveText" placeholder="오늘 하루 목표나 아침 인사를 남겨보세요!" style="width:100%;padding:12px;border-radius:12px;background:var(--cd2);border:1px solid var(--bd2);color:var(--tx);font-size:14px;outline:none;font-family:inherit;resize:none;height:80px;line-height:1.5;margin-bottom:14px"></textarea>
+  <div style="font-size:13px;font-weight:700;margin-bottom:8px">사진 추가 (선택)</div>
+  <div style="display:flex;gap:8px;margin-bottom:14px">
+    <div style="width:72px;height:72px;border-radius:14px;background:var(--cd2);border:2px dashed var(--bd2);display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer" onclick="toast('카메라/갤러리 열기')">📷</div>
+    <div style="font-size:12px;color:var(--sub);line-height:1.6">지금 창밖 풍경이나<br>아침 루틴 사진을 올려보세요</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;background:var(--gnB);border:1px solid var(--gnD);border-radius:10px;padding:10px 12px;margin-bottom:16px">
+    <span style="font-size:16px">✅</span>
+    <div><div style="font-size:12px;font-weight:700;color:var(--gn)">기상 미션 완료 자동 표시</div><div style="font-size:10px;color:var(--sub);margin-top:1px">📐 수학 3문제 클리어</div></div>
+  </div>
+  <button class="btn bp" onclick="postLive()">🌅 라이브 올리기</button>
+</div></div>
+
+<div id="toast"></div>
+</div>
+
+<script>
+const MEMBERS=[
+  {n:'지수',e:'🧑',s:'연세대 21',woke:true,time:'6:02',streak:7,score:70,leader:true},
+  {n:'민준',e:'👧',s:'연세대 22',woke:true,time:'6:17',streak:5,score:60},
+  {n:'나 (현진)',e:'🧒',s:'연세대 23',woke:true,time:'6:47',streak:4,score:50,me:true},
+  {n:'하은',e:'👩',s:'연세대 22',woke:true,time:'7:05',streak:3,score:45},
+  {n:'수민',e:'🧑',s:'연세대 23',woke:true,time:'6:41',streak:4,score:50},
+  {n:'태양',e:'👦',s:'연세대 23',woke:false,time:null,streak:2,score:40},
+  {n:'보라',e:'🧑',s:'연세대 23',woke:false,time:null,streak:0,score:30}
+];
+const STORIES=[
+  {n:'나',e:'🧒',my:true,slides:[{emoji:'🌅',msg:'오늘도 화이팅!',mission:'📐 수학 3문제',time:'6:47 AM'}]},
+  {n:'지수',e:'🧑',slides:[{emoji:'☕',msg:'경제학 시험 파이팅 ✊',mission:'📐 수학 3문제',time:'6:02 AM'},{emoji:'📚',msg:'카페에서 공부 시작',mission:'',time:'6:15 AM'}]},
+  {n:'민준',e:'👧',slides:[{emoji:'🌤️',msg:'날씨 대박.. 산책 다녀옴',mission:'📸 셀카 인증',time:'6:17 AM'}]},
+  {n:'수민',e:'👦',slides:[{emoji:'🏃',msg:'아침 러닝 3km 완료!',mission:'🏋️ 스쿼트',time:'6:41 AM'}]},
+  {n:'하은',e:'👩',seen:true,slides:[{emoji:'🍞',msg:'토스트 해먹는 중 🥰',mission:'🌀 미로탈출',time:'7:05 AM'}]},
+  {n:'고3반A',e:'📚',ext:true,slides:[{emoji:'🔥',msg:'D-127 오늘 수학 올킬 예정',mission:'🔢 거꾸로 입력',time:'5:51 AM'}]},
+  {n:'새벽5시',e:'🌅',ext:true,slides:[{emoji:'🌙',msg:'42일째 새벽 5시 기상 달성!',mission:'📐 수학',time:'4:58 AM'}]},
+  {n:'이대카공',e:'☕',ext:true,slides:[{emoji:'☕',msg:'카공 자리 선점 완료 ㅋㅋ',mission:'📸 셀카',time:'6:30 AM'}]}
+];
+const FEEDS=[
+  {n:'나 (현진)',e:'🧒',s:'연세대 23',me:true,text:'오늘도 기상 완료! 수능 D-127 파이팅 🔥',time:'6:47',mission:'📐 수학 3문제',reacts:[{e:'🔥',c:3,me:false},{e:'💪',c:1}]},
+  {n:'지수',e:'🧑',s:'연세대 21',leader:true,text:'오늘도 6시 기상 성공 🌅 경제학 중간고사 끝나면 스벅 각 ☕ 다들 파이팅!',time:'6:02',mission:'📐 수학 3문제',reacts:[{e:'🔥',c:8,me:true},{e:'💪',c:5},{e:'☕',c:3}]},
+  {n:'민준',e:'👧',s:'연세대 22',text:'커튼 열었더니 날씨 미쳤다.. 갓생 시작 🏃‍♀️',time:'6:17',mission:'📸 셀카 인증',photo:true,reacts:[{e:'😍',c:11},{e:'🌅',c:6}]},
+  {n:'수민',e:'👦',s:'연세대 23',text:'아침 러닝 3km 뛰고 옴 🏃 오늘 과제 끝내야 하는데..',time:'6:41',mission:'🏋️ 스쿼트',reacts:[{e:'💪',c:4},{e:'🔥',c:2}]},
+  {n:'하은',e:'👩',s:'연세대 22',text:'토스트 구워먹고 출발 준비 중 🥰 오늘 발표 있는데 떨려..',time:'7:05',mission:'🌀 미로탈출',reacts:[{e:'❤️',c:5},{e:'👏',c:2}]},
+  {n:'수능생A',e:'📚',s:'고3 수능 반',ext:true,text:'D-127 진짜 쫄린다.. 오늘 수학 3시간 박는다 불수능 각오 🔥',time:'5:51',mission:'🔢 거꾸로 입력',reacts:[{e:'🔥',c:22},{e:'💪',c:15}]},
+  {n:'새벽지기',e:'🌅',s:'새벽 5시 클럽',ext:true,text:'42일 연속 새벽 5시 기상 달성!! 진짜 습관이 된 것 같다 🏆',time:'4:58',mission:'📐 수학',reacts:[{e:'🏆',c:34},{e:'🔥',c:28},{e:'👏',c:19}]},
+  {n:'카공요정',e:'☕',s:'이대 카공방',ext:true,text:'6:30에 카페 문 열자마자 자리 선점 완료 ☕ 오늘도 공시 ㄱ',time:'6:30',mission:'📸 셀카 인증',photo:true,reacts:[{e:'☕',c:9},{e:'💪',c:7}]}
+];
+const ALARMS=[
+  {id:1,h:6,m:30,label:'',days:[1,2,3,4,5],mission:'📐 수학',guild:true,on:true},
+  {id:2,h:7,m:0,label:'주말 갓생',days:[0,6],mission:'📸 셀카',guild:false,on:true},
+  {id:3,h:8,m:0,label:'개인 알람',days:[1,2,3,4,5],mission:'🌀 미로',guild:false,on:false}
+];
+const GUILDS=[
+  {id:1,e:'🌅',n:'새벽 5시 클럽',time:'5:00',region:'전국',age:'전체',members:8,streak:42,tags:['자유 가입'],hot:true},
+  {id:2,e:'📚',n:'고3 수능 반',time:'6:00',region:'서울',age:'고등학생',members:8,streak:15,tags:['조건 가입'],hot:true},
+  {id:3,e:'🎓',n:'자취생 1교시 사수',time:'7:30',region:'전국',age:'대학생',members:6,streak:9,tags:['자유 가입']},
+  {id:4,e:'🏫',n:'중딩 등교 전쟁',time:'7:00',region:'경기',age:'중학생',members:7,streak:21,tags:['조건 가입']},
+  {id:5,e:'🏛️',n:'대학생 공시반',time:'6:00',region:'서울',age:'대학생',members:7,streak:18,tags:['자유 가입']},
+  {id:6,e:'🔒',n:'수험생 비밀방',time:'5:00',region:'서울',age:'고등학생',members:7,streak:33,tags:['비공개']},
+  {id:7,e:'☕',n:'이대 카공방',time:'6:30',region:'서울',age:'대학생',members:8,streak:12,tags:['조건 가입']},
+  {id:8,e:'⚡',n:'고대 법학 새벽반',time:'5:30',region:'서울',age:'대학생',members:6,streak:25,tags:['조건 가입']}
+];
+const SCHOOLS=[
+  {n:'고려대학교',guilds:12,rate:94,score:2840},
+  {n:'연세대학교',guilds:9,rate:91,score:2620,my:true},
+  {n:'서울대학교',guilds:8,rate:89,score:2410},
+  {n:'한양대학교',guilds:7,rate:87,score:2180},
+  {n:'대구고등학교',guilds:3,rate:96,score:1950},
+  {n:'경기외고',guilds:2,rate:93,score:1720},
+  {n:'서강대학교',guilds:5,rate:85,score:1580}
+];
+const BADGES=[
+  {e:'🌅',n:'얼리버드',d:'새벽 5시 이전 기상',b:100,earned:true},
+  {e:'✅',n:'퍼펙트 위크',d:'7일 연속 기상',b:300,earned:true},
+  {e:'🛡️',n:'첫 파티',d:'첫 파티 가입',b:50,earned:true},
+  {e:'🎯',n:'미션 클리어',d:'첫 미션 기상',b:30,earned:true},
+  {e:'🏆',n:'승급',d:'리그 승급 달성',b:250,earned:true},
+  {e:'💪',n:'30일 달성',d:'면제권 없이 30일',b:400},
+  {e:'👑',n:'챔피언',d:'챔피언 리그 도달',b:1000},
+  {e:'🤝',n:'전도사',d:'친구 3명 초대',b:200},
+  {e:'🎙️',n:'목소리 요정',d:'모닝콜 3개 제작',b:100},
+  {e:'👋',n:'인싸',d:'5명 깨우기',b:150}
+];
+const NOTIFS=[
+  {e:'👉',t:'태양님이 콕 찔렀어요!',sub:'아직 안 일어났대요',ago:'3분 전'},
+  {e:'🎙️',t:'지수님이 모닝콜을 보냈어요',sub:'내일 알람에 재생돼요',ago:'12분 전'},
+  {e:'🏆',t:'이번 주 리그 결과 발표!',sub:'실버 II 유지 · 골드까지 170점',ago:'어제'}
+];
+const LEAGUES=[
+  {n:'⚡ 고대 법학 새벽반',s:'실버 II · 6명',score:380},
+  {n:'🛡️ 연세대 경영 스터디',s:'실버 II · 7명',score:320,me:true},
+  {n:'🌙 서강대 미라클팀',s:'실버 II · 5명',score:290},
+  {n:'☕ 이대 카공방',s:'실버 II · 8명',score:250}
+];
+const CHIPS=['전체','고등학생','대학생','수능','취업준비','미라클모닝','공무원','자격증'];
+const DAYNAMES=['일','월','화','수','목','금','토'];
+const MISSIONS=['📐 수학','📸 셀카','🌀 미로','🔢 거꾸로 입력','📳 흔들기','🏋️ 스쿼트','🗣️ 따라 말하기'];
+
+const NM={'s-feed':'n-feed','s-alarm':'n-alarm','s-guild':'n-guild','s-discover':'n-discover','s-profile':'n-profile'};
+function go(id){
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+  if(NM[id]) document.getElementById(NM[id]).classList.add('on');
+}
+let tt;
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2400)}
+function openM(id){document.getElementById(id).classList.add('on')}
+function closeM(id){document.getElementById(id).classList.remove('on')}
+function closeMBg(e,id){if(e.target===document.getElementById(id))closeM(id)}
+function copyCode(){
+  const url='https://wakeleague.app/invite/WK-HJ42';
+  if(navigator.clipboard){navigator.clipboard.writeText(url).then(()=>toast('📋 초대 링크가 복사됐어요!')).catch(()=>toast('코드: WK-HJ42'))}
+  else{toast('코드: WK-HJ42')}
+  closeM('mInvite');
+}
+
+let storyIdx=0,slideIdx=0,storyTimer=null;
+function renderStories(){
+  const c=document.getElementById('storyRow');c.innerHTML='';
+  STORIES.forEach((s,i)=>{
+    const d=document.createElement('div');d.className='st';
+    d.onclick=s.my?()=>openM('mPostLive'):()=>openStory(i);
+    const ringCls=s.my?'my':s.seen?'seen':'';
+    const wt=s.my?'기상':(s.slides&&s.slides[0]&&s.slides[0].time?s.slides[0].time.replace(' AM','').replace(' PM',''):'');
+    d.innerHTML='<div class="sr2 '+ringCls+'"><div class="si2">'+s.e+'</div>'+(wt?'<span class="wt">'+wt+'</span>':'')+'</div><span>'+(s.my?'내 라이브':s.n)+'</span>';
+    c.appendChild(d);
+  });
+}
+function openStory(i){storyIdx=i;slideIdx=0;document.getElementById('storyViewer').classList.add('on');renderSlide()}
+function renderSlide(){
+  const s=STORIES[storyIdx];if(!s||slideIdx>=s.slides.length){closeStory();return}
+  const sl=s.slides[slideIdx];
+  document.getElementById('stAvatar').textContent=s.e;
+  document.getElementById('stName').textContent=s.n;
+  document.getElementById('stTime').textContent=sl.time;
+  document.getElementById('stEmoji').textContent=sl.emoji;
+  document.getElementById('stMsg').textContent=sl.msg;
+  document.getElementById('stMission').textContent=sl.mission?'✅ '+sl.mission:'';
+  const pg=document.getElementById('storyProg');pg.innerHTML='';
+  s.slides.forEach((_,j)=>{const b=document.createElement('div');b.className='progbar';b.innerHTML='<div class="progfill"></div>';pg.appendChild(b)});
+  setTimeout(()=>{const fills=pg.querySelectorAll('.progfill');fills.forEach((f,j)=>{f.style.transition=j<slideIdx?'none':'width 3s linear';f.style.width=j<=slideIdx?'100%':'0%'})},50);
+  clearTimeout(storyTimer);storyTimer=setTimeout(()=>nextStorySlide(),3200);
+}
+function nextStorySlide(){
+  slideIdx++;
+  const s=STORIES[storyIdx];
+  if(!s||slideIdx>=s.slides.length){storyIdx++;slideIdx=0;if(storyIdx>=STORIES.length){closeStory();return}}
+  renderSlide();
+}
+function closeStory(){document.getElementById('storyViewer').classList.remove('on');clearTimeout(storyTimer)}
+function sendStoryReply(){const v=document.getElementById('stReply').value.trim();if(v){toast('💬 "'+v+'" 보냄!');document.getElementById('stReply').value=''}}
+
+function renderFeed(){
+  const c=document.getElementById('feedList');c.innerHTML='';
+  FEEDS.forEach((f,fi)=>{
+    const rhtml=f.reacts.map((r,ri)=>'<div class="rc'+(r.me?' me':'')+'" onclick="toggleReact('+fi+','+ri+')">'+r.e+' <span>'+r.c+'</span></div>').join('')+'<div class="rc" onclick="addNewReact('+fi+')">+ 응원</div>';
+    const photoHtml=f.photo?'<div style="width:100%;height:170px;border-radius:14px;background:linear-gradient(135deg,#FFE0B2,#FFCC80);display:flex;align-items:center;justify-content:center;font-size:40px;margin-top:10px;position:relative;overflow:hidden">'+(f.ext?'🌆':'🌤️')+'<div style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,.45);color:#fff;border-radius:20px;padding:3px 8px;font-size:11px;font-weight:600;backdrop-filter:blur(4px)">'+f.time+'</div></div>':'';
+    const extBadge=f.ext?'<span class="ft2" style="color:var(--blue);background:#EAF2FE;border-color:#D5E5FC">다른 파티</span>':'';
+    const leaderBadge=f.leader?'<span class="ft2">파티장</span>':'';
+    const meBadge=f.me?'<span class="ft2" style="color:var(--gn);background:#E9F8F1;border-color:#CDEFE0">나</span>':'';
+    c.innerHTML+='<div class="fi"><div class="av">'+f.e+'</div><div style="flex:1;min-width:0"><div class="fb2"><div class="fn2">'+f.n+leaderBadge+meBadge+extBadge+'<span class="fs2">'+f.s+'</span></div><div class="fx2">'+f.text+'</div>'+photoHtml+'<div style="display:flex;align-items:center;gap:8px;margin-top:10px"><span style="font-size:11px;color:var(--sub2)">'+f.time+'</span><span class="mt2">✓ '+f.mission+'</span></div></div><div class="rcs">'+rhtml+'</div></div></div>';
+  });
+}
+function toggleReact(fi,ri){const r=FEEDS[fi].reacts[ri];r.me=!r.me;r.c+=r.me?1:-1;renderFeed()}
+function addNewReact(fi){const emojis=['🔥','💪','☕','😍','🌅','👏','❤️','✨'];const e=emojis[Math.floor(Math.random()*emojis.length)];FEEDS[fi].reacts.push({e,c:1,me:true});renderFeed();toast(e+' 응원을 남겼어요!')}
+
+function renderWakeChips(){
+  const c=document.getElementById('wakeChips');c.innerHTML='';
+  MEMBERS.forEach(m=>{c.innerHTML+='<div class="wc"><span class="wd '+(m.woke?'on':'off')+'"></span><span style="color:var(--tx)">'+m.n.replace(' (현진)','')+'</span>'+(m.woke?'<span style="color:var(--sub);font-weight:500;font-size:10px">'+m.time+'</span>':'<span style="color:var(--rd);font-weight:500;font-size:10px">미기상</span>')+'</div>';});
+}
+
+function renderWaveform(){const w=document.getElementById('mcWave');for(let i=0;i<28;i++){const b=document.createElement('div');b.className='bar';b.style.height=(3+Math.random()*14)+'px';w.appendChild(b)}}
+let mcPlaying=false,mcInterval;
+function playMC(){
+  const bars=document.querySelectorAll('#mcWave .bar'),btn=document.getElementById('mcPlayBtn'),timeEl=document.getElementById('mcTime');
+  const PLAY='<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',PAUSE='<svg viewBox="0 0 24 24"><path d="M7 5h3v14H7zM14 5h3v14h-3z"/></svg>';
+  if(mcPlaying){mcPlaying=false;btn.innerHTML=PLAY;bars.forEach(b=>b.style.opacity='.5');clearInterval(mcInterval);timeEl.textContent='0:08';return}
+  mcPlaying=true;btn.innerHTML=PAUSE;let t=0;
+  mcInterval=setInterval(()=>{t++;bars.forEach(b=>{b.style.opacity=Math.random()>.3?'1':'.3';b.style.height=(3+Math.random()*14)+'px'});timeEl.textContent='0:0'+(8-Math.floor(t/6));if(t>=48){clearInterval(mcInterval);mcPlaying=false;btn.innerHTML=PLAY;bars.forEach(b=>b.style.opacity='.5');timeEl.textContent='0:08'}},100);
+}
+
+function renderAlarms(){
+  const c=document.getElementById('alarmList');c.innerHTML='';
+  ALARMS.forEach(a=>{
+    const days=a.days.length===7||a.days.length===0?'매일':a.days.length===5?'평일':a.days.length===2?'주말':a.days.map(d=>DAYNAMES[d]).join('');
+    const hh=a.h<12?'AM':'PM';const h12=a.h===0?12:a.h>12?a.h-12:a.h;
+    c.innerHTML+='<div class="ai'+(a.guild?' ga':'')+'" style="'+(a.on?'':'opacity:.5')+'" onclick="toast(\'알람 편집: '+h12+':'+String(a.m).padStart(2,'0')+'\')"><div><div class="at"><span class="aps">'+hh+'</span>'+h12+':'+String(a.m).padStart(2,'0')+'</div><div class="ainfo">'+days+(a.guild?' · 🛡️ 연세대 경영 스터디':a.label?' · '+a.label:'')+'</div><div class="mp">'+a.mission+'</div></div><div class="tg'+(a.on?' on':'')+'" onclick="event.stopPropagation();toggleAlarm('+a.id+',this)"></div></div>';
+  });
+}
+function toggleAlarm(id,el){const a=ALARMS.find(x=>x.id===id);a.on=!a.on;el.classList.toggle('on');el.closest('.ai').style.opacity=a.on?'1':'.5';toast(a.on?'알람 켜짐':'알람 꺼짐')}
+function initAlarmAdd(){
+  const hSel=document.getElementById('newH'),mSel=document.getElementById('newM');
+  for(let h=0;h<24;h++){const o=document.createElement('option');o.value=h;o.textContent=(h<12?'AM ':'PM ')+(h===0?12:h>12?h-12:h);if(h===6)o.selected=true;hSel.appendChild(o)}
+  for(let m=0;m<60;m+=5){const o=document.createElement('option');o.value=m;o.textContent=String(m).padStart(2,'0');if(m===30)o.selected=true;mSel.appendChild(o)}
+  const dp=document.getElementById('dayPicker');
+  DAYNAMES.forEach((d,i)=>{dp.innerHTML+='<div class="ch'+([1,2,3,4,5].includes(i)?' on':'')+'" style="min-width:36px;text-align:center" onclick="this.classList.toggle(\'on\')">'+d+'</div>';});
+  const mp=document.getElementById('missionPicker');
+  MISSIONS.forEach((m,i)=>{mp.innerHTML+='<div class="ch'+(i===0?' on':'')+'" style="margin-bottom:4px" onclick="document.querySelectorAll(\'#missionPicker .ch\').forEach(c=>c.classList.remove(\'on\'));this.classList.add(\'on\')">'+m+'</div>';});
+}
+function addAlarm(){
+  const h=+document.getElementById('newH').value,m=+document.getElementById('newM').value,label=document.getElementById('newLabel').value;
+  const days=[...document.querySelectorAll('#dayPicker .ch.on')].map((_,i)=>i);
+  const mission=document.querySelector('#missionPicker .ch.on')?.textContent||'📐 수학';
+  ALARMS.push({id:Date.now(),h,m,label:label||'',days,mission,guild:false,on:true});
+  renderAlarms();closeM('mAlarmAdd');toast('⏰ 알람이 추가됐어요!');
+}
+
+let missionSolved=0,missionAnswer=0;
+function showRing(){document.getElementById('ringScreen').classList.add('on');missionSolved=0;genMission()}
+function closeRing(){document.getElementById('ringScreen').classList.remove('on')}
+function genMission(){
+  const ops=['+','-','×'];const op=ops[Math.floor(Math.random()*3)];
+  let a,b;
+  if(op==='+'){a=Math.floor(Math.random()*50)+10;b=Math.floor(Math.random()*50)+10;missionAnswer=a+b}
+  else if(op==='-'){a=Math.floor(Math.random()*50)+30;b=Math.floor(Math.random()*a);missionAnswer=a-b}
+  else{a=Math.floor(Math.random()*12)+2;b=Math.floor(Math.random()*12)+2;missionAnswer=a*b}
+  document.getElementById('missionQ').textContent=a+' '+op+' '+b+' = ?';
+  document.getElementById('missionInput').value='';
+  document.getElementById('missionResult').textContent='';
+  document.getElementById('missionCount').textContent=(missionSolved+1)+' / 3';
+}
+function checkAnswer(){
+  const v=+document.getElementById('missionInput').value;const r=document.getElementById('missionResult');
+  if(!v)return;
+  if(v===missionAnswer){
+    missionSolved++;
+    if(missionSolved>=3){r.style.color='var(--gn)';r.textContent='🎉 기상 완료!';setTimeout(()=>{closeRing();toast('☀️ 굿모닝! 기상 완료 +50P · 42일 연속!')},1200)}
+    else{r.style.color='var(--gn)';r.textContent='✅ 정답! 다음 문제...';setTimeout(genMission,800)}
+  }else{r.style.color='var(--rd)';r.textContent='❌ 다시 풀어보세요'}
+}
+
+function renderMembers(){
+  const c=document.getElementById('memberList');c.innerHTML='';
+  const sorted=[...MEMBERS].sort((a,b)=>b.score-a.score);
+  sorted.forEach((m,i)=>{c.innerHTML+='<div class="mr"><div class="rk'+(i<2?' t':'')+'">'+( i+1)+'</div><div class="av" style="width:30px;height:30px;border-radius:9px;font-size:13px;background:'+(m.me?'linear-gradient(135deg,var(--ac),var(--cy))':'var(--cd2)')+'">'+m.e+'</div><div class="f1"><div style="font-size:13px;font-weight:600">'+m.n+(m.leader?' <span style="font-size:9px;color:var(--ac2);font-weight:600">파티장</span>':'')+'</div><div style="font-size:10px;color:var(--sub)">'+m.s+(m.streak?' · 🔥'+m.streak+'일':'')+'</div></div><div style="font-size:11px;font-weight:700;color:var(--gd)">'+m.score+'점</div>'+(m.woke||m.me?'<div class="mst ok">기상</div>':'<div class="mst sl" style="cursor:pointer" onclick="toast(\'👉 '+m.n+'님을 콕 찔렀어요!\')">콕!</div>')+'</div>';});
+}
+
+function renderLeagues(){
+  const c=document.getElementById('leagueList');c.innerHTML='';
+  LEAGUES.forEach((l,i)=>{c.innerHTML+='<div class="mr"'+(l.me?' style="background:var(--acB);border-radius:8px;padding:8px;margin:-4px;margin-bottom:4px"':'')+'><div class="rk'+(i===0?' t':'')+'">'+( i+1)+'</div><div class="f1"><div style="font-size:13px;font-weight:'+(l.me?700:600)+'">'+l.n+'</div><div style="font-size:10px;color:var(--sub)">'+l.s+'</div></div><div style="font-size:'+(l.me?14:12)+'px;font-weight:700;color:var(--gd)">'+l.score+'점</div></div>';});
+  c.innerHTML+='<div style="font-size:10px;color:var(--sub);text-align:center;margin-top:8px;padding:4px">상위 2팀 골드 승급 · 하위 2팀 브론즈 강등</div>';
+}
+
+let activeChip='전체';
+function renderChips(){
+  const c=document.getElementById('chipRow');c.innerHTML='';
+  CHIPS.forEach(ch=>{c.innerHTML+='<div class="ch'+(ch===activeChip?' on':'')+'" onclick="activeChip=\''+ch+'\';renderChips();filterGuilds()">'+ch+'</div>';});
+}
+function filterGuilds(){
+  const q=(document.getElementById('searchInput')?.value||'').toLowerCase();
+  const c=document.getElementById('guildSearchList');c.innerHTML='';
+  GUILDS.filter(g=>{
+    if(activeChip!=='전체'&&!g.age.includes(activeChip)&&!g.tags.join('').includes(activeChip))return false;
+    if(q&&!g.n.toLowerCase().includes(q)&&!g.age.includes(q)&&!g.region.includes(q))return false;
+    return true;
+  }).forEach(g=>{
+    const tags=g.tags.map(t=>'<span class="gt3 '+(t.includes('자유')?'o':t.includes('비공개')?'l':'s')+'">'+t+'</span>').join('')+(g.hot?'<span class="gt3 h">🔥 HOT</span>':'');
+    c.innerHTML+='<div class="gc" onclick="showJoinGuild('+g.id+')"><div class="gi">'+g.e+'</div><div class="f1"><div style="font-size:14px;font-weight:700">'+g.n+'</div><div style="font-size:11px;color:var(--sub);margin-top:2px">AM '+g.time+' · '+g.region+' · '+g.members+'명 · 🔥'+g.streak+'일</div><div style="margin-top:4px">'+tags+'</div></div></div>';
+  });
+}
+function showJoinGuild(id){
+  const g=GUILDS.find(x=>x.id===id);if(!g)return;
+  document.getElementById('joinEmoji').textContent=g.e;
+  document.getElementById('joinName').textContent=g.n;
+  document.getElementById('joinMeta').textContent='AM '+g.time+' · '+g.region+' · '+g.members+'명 · 🔥'+g.streak+'일 연속';
+  openM('mJoinGuild');
+}
+
+function renderSchoolRanks(){
+  const medals=['🥇','🥈','🥉'];
+  ['schoolRankSmall','schoolRankFull'].forEach(id=>{
+    const c=document.getElementById(id);if(!c)return;c.innerHTML='';
+    const list=id==='schoolRankSmall'?SCHOOLS.slice(0,3):SCHOOLS;
+    list.forEach((s,i)=>{c.innerHTML+='<div class="skr"><div class="srk" style="color:'+(i===0?'var(--gd)':i===1?'#C0C8E0':i===2?'#C08050':'var(--sub)')+'">'+( i<3?medals[i]:i+1)+'</div><div class="f1"><div style="font-size:13px;font-weight:700">'+s.n+(s.my?' <span style="background:var(--acB);padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;color:var(--ac2)">MY</span>':'')+'</div><div style="font-size:10px;color:var(--sub);margin-top:1px">'+s.guilds+'개 파티 · 기상률 '+s.rate+'%</div></div><div style="font-size:14px;font-weight:800;color:var(--ac2)">'+s.score.toLocaleString()+'</div></div>';});
+  });
+}
+
+function renderBadges(){
+  const c=document.getElementById('badgeGrid');c.innerHTML='';
+  BADGES.forEach(b=>{c.innerHTML+='<div class="bi'+(b.earned?' e':'')+'" onclick="showBadge(\''+b.e+'\',\''+b.n+'\',\''+b.d+'\','+b.b+','+!!b.earned+')">'+(b.earned?b.e:'🔒')+'<div class="bn2">'+b.n+'</div></div>';});
+}
+function showBadge(e,n,d,b,earned){
+  document.getElementById('bdEmoji').textContent=earned?e:'🔒';
+  document.getElementById('bdName').textContent=n;
+  document.getElementById('bdDesc').textContent=d;
+  document.getElementById('bdBonus').textContent=earned?'✅ 획득 완료 · +'+b+'P':'🔒 미획득 · 달성 시 +'+b+'P';
+  openM('mBadge');
+}
+
+function renderCal(){
+  const c=document.getElementById('calCard');let h='<div class="cal">';
+  DAYNAMES.forEach(d=>{h+='<div class="dayh">'+d+'</div>'});
+  const today=24;
+  for(let i=1;i<=30;i++){
+    const cls=i===today?'today':i<today?(Math.random()>.15?'woke':'miss'):'future';
+    h+='<div class="dayn '+cls+'" onclick="toast(\'6월 '+i+'일: '+(cls==='woke'?'기상 완료 ✅':cls==='miss'?'미기상 ❌':'아직 안 됨')+'\')">'+i+'</div>';
+  }
+  h+='</div>';c.innerHTML=h;
+}
+
+function renderNotifs(){
+  const c=document.getElementById('notifList');c.innerHTML='';
+  NOTIFS.forEach(n=>{c.innerHTML+='<div class="c" style="padding:11px;margin-bottom:6px"><div class="row" style="gap:10px"><div style="font-size:22px">'+n.e+'</div><div class="f1"><div style="font-size:13px;font-weight:700">'+n.t+'</div><div style="font-size:11px;color:var(--sub);margin-top:2px">'+n.sub+'</div></div><div style="font-size:10px;color:var(--sub2)">'+n.ago+'</div></div></div>';});
+}
+
+let recording=false,recSec=0,recInt;
+function toggleRec(){
+  const btn=document.getElementById('recBtn'),st=document.getElementById('recStatus'),timer=document.getElementById('recTimer');
+  if(!recording){recording=true;recSec=0;btn.style.background='var(--rd)';btn.style.transform='scale(1.15)';btn.textContent='⏹';st.textContent='녹음 중...';
+    recInt=setInterval(()=>{recSec++;const s=recSec%60,m=Math.floor(recSec/60);timer.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');if(recSec>=10){clearInterval(recInt);stopRec()}},1000);
+  }else stopRec();
+}
+function stopRec(){
+  recording=false;clearInterval(recInt);
+  const btn=document.getElementById('recBtn'),st=document.getElementById('recStatus'),done=document.getElementById('recDone');
+  btn.style.background='var(--gn)';btn.style.transform='scale(1)';btn.textContent='✓';st.textContent='녹음 완료!';done.style.display='block';
+}
+function saveRec(){
+  closeM('mRecord');toast('🎙️ 모닝콜이 파티원에게 전송됐어요!');
+  document.getElementById('recBtn').textContent='🎙️';document.getElementById('recBtn').style.background='var(--rd)';
+  document.getElementById('recStatus').textContent='탭해서 녹음 시작';document.getElementById('recTimer').textContent='00:00';document.getElementById('recDone').style.display='none';
+}
+
+function selectMood(el){document.querySelectorAll('.mood-chip').forEach(m=>m.classList.remove('on'));el.classList.add('on')}
+function postLive(){
+  const txt=document.getElementById('liveText').value.trim();
+  const mood=document.querySelector('.mood-chip.on')?.textContent||'🌅 상쾌';
+  const emoji=mood.split(' ')[0]||'🌅';
+  const msg=txt||'오늘도 파이팅! '+mood;
+  const now=new Date();
+  const timeStr=now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+  closeM('mPostLive');
+  STORIES[0]={n:'나',e:'🧒',my:true,slides:[{emoji,msg,mission:'📐 수학 3문제',time:timeStr+' AM'}]};
+  renderStories();
+  FEEDS.unshift({n:'나 (현진)',e:'🧒',s:'연세대 23',me:true,text:msg,time:timeStr,mission:'📐 수학 3문제',reacts:[{e:'🔥',c:0}]});
+  renderFeed();
+  toast('🌅 라이브 올리기 완료!');
+  document.getElementById('liveText').value='';
+}
+
+function updateClock(){
+  const now=new Date();
+  document.getElementById('clockDisplay').textContent=now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+}
+
+function init(){
+  renderStories();renderFeed();renderWakeChips();renderWaveform();
+  renderAlarms();initAlarmAdd();renderMembers();renderLeagues();
+  renderChips();filterGuilds();renderSchoolRanks();renderBadges();renderCal();renderNotifs();
+  updateClock();setInterval(updateClock,30000);
+}
+init();
+</script>
+</html>
